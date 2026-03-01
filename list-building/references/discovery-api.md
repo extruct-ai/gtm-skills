@@ -1,5 +1,8 @@
 # Discovery API Reference
 
+Official API reference:
+- https://www.extruct.ai/docs/api-reference/introduction
+
 `POST /v1/discovery_tasks` — find companies via deep web research with AI evaluation.
 
 ## Request Body
@@ -7,11 +10,14 @@
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `query` | string | yes | Natural-language description of target companies |
-| `desired_num_results` | int | no | 1-10,000. Default: 100 |
-| `criteria` | array | no | Evaluation criteria (see below) |
+| `desired_num_results` | int | no | 1-10,000. API default: 100. Skill default: 50 |
+| `criteria` | array | no | Evaluation criteria (see below). Recommended: up to 5 criteria |
 | `table` | object | no | Auto-import results to a table |
 | `auto_data_sources` | bool | no | Let system pick sources. Default: true |
-| `data_sources` | array | no | Manual: `web_search`, `linkedin`, `maps` |
+| `data_sources` | array | no | Manual: `web_search`, `extruct_db`, `linkedin`, `maps` |
+
+Rule:
+- If `auto_data_sources` is `false`, `data_sources` must be provided.
 
 ## Criteria
 
@@ -64,9 +70,12 @@ Status values: `created` -> `in_progress` -> `done` | `failed`
 
 Returns same shape as creation response with updated counts.
 
+Recommended skill behavior:
+- Poll once per minute (`60s`) until `status` is `done` or `failed`.
+
 ## Fetching Results
 
-`GET /v1/discovery_tasks/{task_id}/results?limit=200`
+`GET /v1/discovery_tasks/{task_id}/results?limit=100&offset=0`
 
 Each result:
 

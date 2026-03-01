@@ -22,27 +22,27 @@ These 10 skills form a connected pipeline. Run them in order for a full campaign
    (10. Feedback loop → company-context-builder)
 ```
 
-| Step | Skill | Trigger | Description |
-|------|-------|---------|-------------|
-| 0 | **company-context-builder** | "company context", "ICP", "win cases" | Build/maintain global context file for all skills |
-| 1 | **list-building** | "find companies", "build a list", "lookalike" | Build company lists with decision tree + lookalike mode |
-| 2 | **market-problems-deep-research** | "deep research", "hypothesis set", "market research" | Research vertical pain points via Perplexity |
-| 3 | **data-points-builder** | "data points", "enrichment columns", "column design" | Design enrichment columns (segmentation + personalization) |
-| 4 | **table-enrichment** | "enrich", "add column", "run enrichment" | Add columns to Extruct table with progress monitoring |
-| 6 | **segment-and-tier** | "segment", "tier", "prioritize list" | Tier companies by hypothesis fit + data richness |
-| 6b | **linkedin-finder** | "find linkedin", "find people", "find contacts" | Find LinkedIn profiles via Extruct (zero credits) |
-| 6c | **email-finder** | "find emails", "enrich contacts", "email finder" | Get verified emails + phones via Prospeo / Fullenrich |
-| 7 | **email-generation** | "generate emails", "email pipeline" | Generate emails from CSV + prompt (tier-aware) |
-| 8 | **copy-feedback** | "review email", "copy feedback", "persona review" | Persona-based review for Tier 1 accounts |
-| 9 | **run-instantly** | "upload to instantly", "send emails" | Upload leads to Instantly + pre-send checklist |
+| Step | Skill | Trigger | Description | SKILL.md |
+|------|-------|---------|-------------|----------|
+| 0 | **company-context-builder** | "company context", "ICP", "win cases" | Build/maintain global context file for all skills | [SKILL.md](company-context-builder/SKILL.md) |
+| 1 | **list-building** | "find companies", "build a list", "lookalike" | Build company lists with decision tree + lookalike mode | [SKILL.md](list-building/SKILL.md) |
+| 2 | **market-problems-deep-research** | "deep research", "hypothesis set", "market research" | Research vertical pain points via Perplexity | [SKILL.md](market-problems-deep-research/SKILL.md) |
+| 3 | **data-points-builder** | "data points", "enrichment columns", "column design" | Design enrichment columns (segmentation + personalization) | [SKILL.md](data-points-builder/SKILL.md) |
+| 4 | **table-enrichment** | "enrich", "add column", "run enrichment" | Add columns to Extruct table with progress monitoring | [SKILL.md](table-enrichment/SKILL.md) |
+| 6 | **segment-and-tier** | "segment", "tier", "prioritize list" | Tier companies by hypothesis fit + data richness | [SKILL.md](segment-and-tier/SKILL.md) |
+| 6b | **linkedin-finder** | "find linkedin", "find people", "find contacts" | Find LinkedIn profiles via Extruct (zero credits) | [SKILL.md](linkedin-finder/SKILL.md) |
+| 6c | **email-finder** | "find emails", "enrich contacts", "email finder" | Get verified emails + phones via Prospeo / Fullenrich | [SKILL.md](email-finder/SKILL.md) |
+| 7 | **email-generation** | "generate emails", "email pipeline" | Generate emails from CSV + prompt (tier-aware) | [SKILL.md](email-generation/SKILL.md) |
+| 8 | **copy-feedback** | "review email", "copy feedback", "persona review" | Persona-based review for Tier 1 accounts | [SKILL.md](copy-feedback/SKILL.md) |
+| 9 | **run-instantly** | "upload to instantly", "send emails" | Upload leads to Instantly + pre-send checklist | [SKILL.md](run-instantly/SKILL.md) |
 
 ## Other Skills
 
-| Skill | Trigger | Description |
-|-------|---------|-------------|
-| **create-table** | "create table", "upload companies" | Create Extruct table, upload rows, add columns |
-| **cold-email** | "cold email", "outreach prompt" | Email prompt template builder |
-| **company-edit** | "format companies", "company list" | Format company data for blog articles |
+| Skill | Trigger | Description | SKILL.md |
+|-------|---------|-------------|----------|
+| **create-table** | "create table", "upload companies" | Create Extruct table, upload rows, add columns | [SKILL.md](create-table/SKILL.md) |
+| **cold-email** | "cold email", "outreach prompt" | Email prompt template builder | [SKILL.md](cold-email/SKILL.md) |
+| **company-edit** | "format companies", "company list" | Format company data for blog articles | [SKILL.md](company-edit/SKILL.md) |
 
 ## Structure
 
@@ -119,11 +119,15 @@ Skills depend on external APIs. All keys are loaded from a `.env` file via `pyth
 
 | Variable | Service | Base URL | Used by |
 |----------|---------|----------|---------|
-| `EXTRUCT_API_TOKEN` | Extruct API | `https://api.extruct.ai/v1` | list-building, table-enrichment, create-table |
+| `EXTRUCT_API_TOKEN` | Extruct API | `https://api.extruct.ai/v1` | list-building, table-enrichment, create-table, linkedin-finder, segment-and-tier, email-finder |
 | `PERPLEXITY_API_KEY` | Perplexity (Sonar Pro) | `https://api.perplexity.ai/chat/completions` | market-problems-deep-research, copy-feedback |
 | `PROSPEO_API_KEY` | Prospeo | `https://api.prospeo.io` | email-finder |
 | `FULLENRICH_API_KEY` | Fullenrich | `https://api.fullenrich.com/api/v1` | email-finder |
 | `INSTANTLY_API_KEY` | Instantly | `https://api.instantly.ai/api/v2` | run-instantly |
+
+### Extruct API Reference
+
+- Official API reference: https://www.extruct.ai/docs/api-reference/introduction
 
 ### `.env` setup
 

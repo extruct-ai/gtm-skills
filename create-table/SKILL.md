@@ -24,6 +24,10 @@ HEADERS = {"Authorization": f"Bearer {TOKEN}", "Content-Type": "application/json
 BASE = "https://api.extruct.ai/v1"
 ```
 
+## Official API Reference
+
+- https://www.extruct.ai/docs/api-reference/introduction
+
 ## Workflow
 
 ### 1. Parse input data
@@ -144,9 +148,20 @@ See the [table-enrichment skill](../table-enrichment/SKILL.md) for full column t
 ### 5. Trigger enrichment
 
 ```python
-resp = requests.post(f"{BASE}/tables/{table_id}/run", headers=HEADERS, json={})
-run = resp.json()
-print(f"Run started: {run['num_requested_cells']} cells queued")
+# Track IDs of newly added agent columns in Step 4.
+# Example: new_column_ids = ["col_id_1", "col_id_2"]
+
+if new_column_ids:
+    resp = requests.post(
+        f"{BASE}/tables/{table_id}/run",
+        headers=HEADERS,
+        json={"mode": "new", "columns": new_column_ids}
+    )
+    resp.raise_for_status()
+    run = resp.json()
+    print(f"Run started: {run['num_requested_cells']} cells queued")
+else:
+    print("No new agent columns were added. Skip run, or confirm a specific rerun scope with the user.")
 ```
 
 ### 6. Report to user

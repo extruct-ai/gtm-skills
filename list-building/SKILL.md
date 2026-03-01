@@ -16,6 +16,10 @@ description: >
 
 Build company lists using Extruct API methods, guided by a decision tree. Reads from the company context file for ICP and seed companies.
 
+## Official API Reference
+
+- https://www.extruct.ai/docs/api-reference/introduction
+
 ## Decision Tree
 
 Before running any queries, determine the right approach:
@@ -63,16 +67,19 @@ BASE = "https://api.extruct.ai/v1"
 
 ## Method 1: Lookalike Search
 
-Use when you have a seed company (from win cases, existing customers, or user input). The Search API has a native `lookalike` parameter.
+Use when you have a seed company (from win cases, existing customers, or user input). Use the Similar Companies endpoint with a company identifier (domain or UUID).
 
 ```python
-resp = requests.get(f"{BASE}/companies/search", headers=HEADERS, params={
-    "lookalike": "seedcompany.com",
+company_identifier = "seedcompany.com"  # domain or company UUID
+
+resp = requests.get(f"{BASE}/companies/{company_identifier}/similar", headers=HEADERS, params={
     "filters": json.dumps({
         "include": {"size": ["11-50", "51-200"], "country": ["United States"]}
     }),
     "limit": 100,
+    "offset": 0,
 })
+resp.raise_for_status()
 results = resp.json()["results"]
 ```
 
@@ -82,9 +89,10 @@ results = resp.json()["results"]
 - User says "find companies similar to X"
 
 **Tips:**
-- Run multiple lookalike searches with different seed companies for broader coverage
+- Run multiple similar-company searches with different seed companies for broader coverage
 - Combine with filters to constrain geography or size
 - Deduplicate across runs by domain
+- Default to `limit=100`; increase up to `200` when broader coverage is needed
 
 ## Method 2: Semantic Search — Fast, Broad
 
@@ -97,8 +105,9 @@ resp = requests.get(f"{BASE}/companies/search", headers=HEADERS, params={
         "include": {"size": ["11-50", "51-200"], "country": ["United States"]},
         "range": {"founded": {"min": 2018}}
     }),
-    "limit": 50,
+    "limit": 100,
 })
+resp.raise_for_status()
 results = resp.json()["results"]
 ```
 
@@ -106,7 +115,8 @@ results = resp.json()["results"]
 - Write 3-5 queries per campaign, each from a different angle on the same ICP
 - Describe the product/use case, not the company type
 - Deduplicate across queries by domain — overlap is expected
-- Target 200-500 companies total across all queries
+- Default to `limit=100` per query; increase up to `200` when needed
+- Target 200-800 companies total across all queries
 
 **Filters:** See [references/search-filters.md](references/search-filters.md)
 
@@ -119,7 +129,7 @@ results = resp.json()["results"]
 ```python
 resp = requests.post(f"{BASE}/discovery_tasks", headers=HEADERS, json={
     "query": "US-based SaaS startups that offer supplier discovery and search features...",
-    "desired_num_results": 100,
+    "desired_num_results": 50,
     "criteria": [
         {"key": "has_feature", "name": "Core Feature",
          "criterion": "Company offers X as a core product feature"},
@@ -127,27 +137,36 @@ resp = requests.post(f"{BASE}/discovery_tasks", headers=HEADERS, json={
          "criterion": "Company relies on external data to power Y"},
     ],
 })
+resp.raise_for_status()
 task_id = resp.json()["id"]
 ```
 
 **Poll for completion:**
 ```python
-status = requests.get(f"{BASE}/discovery_tasks/{task_id}", headers=HEADERS).json()
-# status["status"]: created | in_progress | done | failed
+while True:
+    status = requests.get(f"{BASE}/discovery_tasks/{task_id}", headers=HEADERS).json()
+    # status["status"]: created | in_progress | done | failed
+    if status["status"] in ("done", "failed"):
+        break
+    time.sleep(60)  # poll once a minute
 ```
 
 **Fetch results when done:**
 ```python
 results = requests.get(
-    f"{BASE}/discovery_tasks/{task_id}/results", headers=HEADERS, params={"limit": 200}
+    f"{BASE}/discovery_tasks/{task_id}/results",
+    headers=HEADERS,
+    params={"limit": 100, "offset": 0}
 ).json()["results"]
 ```
 
 **Query strategy:**
 - Write queries like a job description — 2-3 sentences describing the ideal company
 - Use criteria to auto-qualify — each company gets graded 1-5 per criterion
+- Default `desired_num_results=50` for first pass; expand after quality review
+- Use up to 5 criteria per task; keep criteria focused and non-overlapping
 - Run separate tasks for different ICP segments
-- Scans 1000+ candidates to find ~100 qualified — takes 3-10 min
+- Scans many candidates to find qualified matches — runtime depends on query scope
 - Up to 10,000 results per task
 
 See [references/discovery-api.md](references/discovery-api.md) for full parameters.

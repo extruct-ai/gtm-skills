@@ -4,14 +4,13 @@ description: >
   Find LinkedIn profiles of decision makers at target companies using Extruct's
   company_people_finder. Takes a company table, adds a people finder column,
   and produces a linked child people table with names, roles, and LinkedIn URLs.
-  No external API credits — uses Extruct's index only.
   Triggers on: "find linkedin", "find people", "find contacts", "find decision makers",
   "people search", "linkedin search", "who to contact", "find profiles".
 ---
 
 # LinkedIn Finder
 
-Find the right people at target companies via Extruct. Produces a people table with LinkedIn profiles — no external API credits needed.
+Find the right people at target companies via Extruct. Produces a people table with LinkedIn profiles.
 
 ## Where This Fits in the Pipeline
 
@@ -36,6 +35,10 @@ HEADERS = {
 }
 ```
 
+## Official API Reference
+
+- https://www.extruct.ai/docs/api-reference/introduction
+
 ## Inputs
 
 | Input | Source | Required |
@@ -52,8 +55,12 @@ Fetch table metadata to confirm it's a company table with rows:
 
 ```python
 resp = requests.get(f"{BASE_URL}/tables/{table_id}", headers=HEADERS)
+resp.raise_for_status()
 table = resp.json()
-print(f"Table: {table['name']}, Kind: {table['kind']}, Rows: {table.get('row_count', 'unknown')}")
+num_rows = table.get("num_rows")
+if num_rows is None:
+    num_rows = (table.get("status") or {}).get("num_rows", "unknown")
+print(f"Table: {table['name']}, Kind: {table['kind']}, Rows: {num_rows}")
 ```
 
 ### Step 2: Define roles
@@ -105,7 +112,8 @@ resp = requests.post(
     headers=HEADERS,
     json={"column_configs": [column_config]}
 )
-column_id = resp.json()["columns"][0]["id"]
+resp.raise_for_status()
+column_id = resp.json()[0]["id"]
 print(f"Column created: {column_id}")
 ```
 
@@ -154,6 +162,8 @@ The child people table has auto-created columns:
 
 For richer profile data (experience, education, skills), add a `linkedin` agent column to the people table:
 
+This is optional and may be expensive at scale. Confirm with the user before running.
+
 ```python
 linkedin_col = {
     "kind": "agent",
@@ -170,14 +180,16 @@ resp = requests.post(
     headers=HEADERS,
     json={"column_configs": [linkedin_col]}
 )
-linkedin_col_id = resp.json()["columns"][0]["id"]
+resp.raise_for_status()
+linkedin_col_id = resp.json()[0]["id"]
 
 # Trigger run for linkedin_data only
-requests.post(
+run_resp = requests.post(
     f"{BASE_URL}/tables/{people_table_id}/run",
     headers=HEADERS,
     json={"columns": [linkedin_col_id]}
 )
+run_resp.raise_for_status()
 ```
 
 This is optional — skip if you only need name + role + LinkedIn URL for the `email-finder` step.

@@ -28,6 +28,10 @@ HEADERS = {
 }
 ```
 
+## Official API Reference
+
+- https://www.extruct.ai/docs/api-reference/introduction
+
 ## Workflow
 
 ### 1. Confirm the table
@@ -36,6 +40,7 @@ Get the table ID from the user (URL or ID). Fetch table metadata to confirm:
 
 ```python
 resp = requests.get(f"{BASE_URL}/tables/{table_id}", headers=HEADERS)
+resp.raise_for_status()
 table = resp.json()
 ```
 
@@ -88,14 +93,15 @@ new_column_ids = [col["id"] for col in resp.json()]
 
 ### 5. Trigger enrichment (only the new columns)
 
-**Important:** Always scope the run to the newly created column(s) only. Passing an empty body runs ALL pending cells across ALL columns, which re-triggers already-completed enrichments.
+**Important:** Always scope the run to the newly created column(s) only, and pass explicit mode. Avoid broad or implicit run payloads when you only intend to enrich specific columns.
 
 ```python
 resp = requests.post(
     f"{BASE_URL}/tables/{table_id}/run",
     headers=HEADERS,
-    json={"columns": new_column_ids}
+    json={"mode": "new", "columns": new_column_ids}
 )
+resp.raise_for_status()
 ```
 
 Report: run ID, rows queued, and table URL.
@@ -107,8 +113,16 @@ Poll the table to track enrichment progress. Show a progress update every 30 sec
 ```python
 def monitor_enrichment(table_id, column_ids, interval=30, max_polls=40):
     """Monitor enrichment progress. Polls every `interval` seconds."""
+    table_resp = requests.get(f"{BASE_URL}/tables/{table_id}", headers=HEADERS)
+    table_resp.raise_for_status()
+    table = table_resp.json()
+    column_id_to_key = {
+        col["id"]: col["key"] for col in table.get("columns", []) if col["id"] in column_ids
+    }
+
     for i in range(max_polls):
         resp = requests.get(f"{BASE_URL}/tables/{table_id}/data", headers=HEADERS)
+        resp.raise_for_status()
         data = resp.json()
         rows = data.get("rows", [])
         total = len(rows)
@@ -123,8 +137,9 @@ def monitor_enrichment(table_id, column_ids, interval=30, max_polls=40):
         failed = 0
 
         for row in rows:
-            for col_id in column_ids:
-                cell = row.get("cells", {}).get(col_id, {})
+            row_data = row.get("data", {})
+            for col_id, col_key in column_id_to_key.items():
+                cell = row_data.get(col_key, {})
                 status = cell.get("status", "pending")
                 if status == "done":
                     completed += 1
@@ -158,25 +173,38 @@ After enrichment completes (or after 50%+ is done), fetch a sample and display f
 ```python
 def spot_check(table_id, column_ids, sample_size=5):
     """Fetch a sample of enriched rows for quality review."""
+    table_resp = requests.get(f"{BASE_URL}/tables/{table_id}", headers=HEADERS)
+    table_resp.raise_for_status()
+    table = table_resp.json()
+    column_id_to_key = {
+        col["id"]: col["key"] for col in table.get("columns", []) if col["id"] in column_ids
+    }
+
     resp = requests.get(f"{BASE_URL}/tables/{table_id}/data", headers=HEADERS)
+    resp.raise_for_status()
     data = resp.json()
     rows = data.get("rows", [])
 
     # Filter to rows where our columns have data
     enriched = [r for r in rows if any(
-        r.get("cells", {}).get(cid, {}).get("status") == "done"
-        for cid in column_ids
+        r.get("data", {}).get(col_key, {}).get("status") == "done"
+        for col_key in column_id_to_key.values()
     )]
 
     sample = enriched[:sample_size]
 
     for row in sample:
-        domain = row.get("data", {}).get("input", "unknown")
+        input_cell = row.get("data", {}).get("input", {})
+        domain = (
+            input_cell.get("value", {}).get("answer")
+            if isinstance(input_cell, dict)
+            else input_cell
+        ) or "unknown"
         print(f"\n--- {domain} ---")
-        for col_id in column_ids:
-            cell = row.get("cells", {}).get(col_id, {})
+        for col_id, col_key in column_id_to_key.items():
+            cell = row.get("data", {}).get(col_key, {})
             value = cell.get("value", "N/A")
-            print(f"  {col_id}: {value}")
+            print(f"  {col_key} ({col_id}): {value}")
 ```
 
 **Present to user as a table.** Ask:

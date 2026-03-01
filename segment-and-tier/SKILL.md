@@ -20,6 +20,25 @@ Take an enriched table + hypothesis set and produce a tiered, segmented list. Th
 | Hypothesis set | `claude-code-gtm/context/{vertical-slug}/hypothesis_set.md` or context file | yes |
 | Context file | `claude-code-gtm/context/extruct_context.md` | recommended |
 
+## Auth
+
+```python
+from dotenv import load_dotenv
+load_dotenv()
+import os, requests
+
+API_TOKEN = os.getenv("EXTRUCT_API_TOKEN")
+BASE_URL = "https://api.extruct.ai/v1"
+HEADERS = {
+    "Authorization": f"Bearer {API_TOKEN}",
+    "Content-Type": "application/json",
+}
+```
+
+## Official API Reference
+
+- https://www.extruct.ai/docs/api-reference/introduction
+
 ## Workflow
 
 ### Step 1: Load data
@@ -28,6 +47,7 @@ Fetch the enriched table data:
 
 ```python
 resp = requests.get(f"{BASE_URL}/tables/{table_id}/data", headers=HEADERS)
+resp.raise_for_status()
 data = resp.json()
 rows = data.get("rows", [])
 ```
