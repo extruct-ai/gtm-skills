@@ -10,7 +10,7 @@ Official API reference:
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `query` | string | yes | Natural-language description of target companies |
-| `desired_num_results` | int | no | 1-10,000. API default: 100. Skill default: 50 |
+| `desired_num_results` | int | no | 1-250. API default: 100. Skill default: 50 |
 | `criteria` | array | no | Evaluation criteria (see below). Recommended: up to 5 criteria |
 | `table` | object | no | Auto-import results to a table |
 | `auto_data_sources` | bool | no | Let system pick sources. Default: true |

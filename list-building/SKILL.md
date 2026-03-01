@@ -167,7 +167,7 @@ results = requests.get(
 - Use up to 5 criteria per task; keep criteria focused and non-overlapping
 - Run separate tasks for different ICP segments
 - Scans many candidates to find qualified matches — runtime depends on query scope
-- Up to 10,000 results per task
+- Up to 250 results per task
 
 See [references/discovery-api.md](references/discovery-api.md) for full parameters.
 
