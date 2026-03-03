@@ -1,0 +1,14 @@
+{
+  "name": "gtm-skills",
+  "owner": {
+    "name": "Extruct"
+  },
+  "plugins": [
+    {
+      "name": "gtm-skills",
+      "description": "GTM building blocks: context building, list building, market research, enrichment, segmentation, email generation, email response simulation, and campaign sending.",
+      "source": "./",
+      "version": "1.0.0"
+    }
+  ]
+}
