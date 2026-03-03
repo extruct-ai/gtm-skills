@@ -234,7 +234,7 @@ Use these patterns to improve the base template in `email-generation` for Tier 2
 - **Be brutally honest.** If the email will be deleted, say so. Sugarcoating wastes the user's time.
 - **The emotional reaction is primary.** Most cold emails are killed in 2 seconds. The business case only matters if they survive the gut check.
 - **Respect the voice rules.** All rewrites must stay within the voice constraints from `email-generation` / `email-prompt-building`.
-- **One email, one prospect.** Never batch this. The whole point is depth.
+- **One email, one prospect.** Never run in bulk. The whole point is depth.
 - **The bridge is everything.** The gap between "their pain" and "your solution" is where most emails fail. If the bridge is weak, no amount of copywriting fixes it — the hypothesis match might be wrong.
 
 ## Reference

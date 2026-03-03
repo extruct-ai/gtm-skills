@@ -19,7 +19,7 @@ End-to-end workflow: parse company data → create/reuse Extruct table → uploa
 |----------|---------|
 | `EXTRUCT_API_TOKEN` | Extruct API |
 
-Before making API calls, verify credentials are available by running `echo $EXTRUCT_API_TOKEN | head -c 5` in the terminal. If empty, ask the user to provide their Extruct API token and set it via `export EXTRUCT_API_TOKEN=<value>`. Do not proceed until confirmed.
+Before making API calls, check that `EXTRUCT_API_TOKEN` is set by running `test -n "$EXTRUCT_API_TOKEN" && echo "set" || echo "missing"`. If missing, ask the user to provide their Extruct API token and set it via `export EXTRUCT_API_TOKEN=<value>`. Do not proceed until confirmed.
 
 Base URL: `https://api.extruct.ai/v1`
 
@@ -52,7 +52,7 @@ Accept data in any of these formats:
 Key rules:
 - Skip entries with no URL (e.g., "Stealth" companies)
 - Deduplicate by domain
-- Collect metadata fields the user wants to preserve (country, stage, industry, etc.)
+- Ask which metadata fields to preserve (country, stage, industry, etc.)
 
 ### 2. Decide: create new table or add to existing
 

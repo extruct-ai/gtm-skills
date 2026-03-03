@@ -62,7 +62,7 @@ Also check for a hypothesis set at `claude-code-gtm/context/{vertical-slug}/hypo
 |----------|---------|
 | `EXTRUCT_API_TOKEN` | Extruct API |
 
-Before making API calls, verify credentials are available by running `echo $EXTRUCT_API_TOKEN | head -c 5` in the terminal. If empty, ask the user to provide their Extruct API token and set it via `export EXTRUCT_API_TOKEN=<value>`. Do not proceed until confirmed.
+Before making API calls, check that `EXTRUCT_API_TOKEN` is set by running `test -n "$EXTRUCT_API_TOKEN" && echo "set" || echo "missing"`. If missing, ask the user to provide their Extruct API token and set it via `export EXTRUCT_API_TOKEN=<value>`. Do not proceed until confirmed.
 
 Base URL: `https://api.extruct.ai/v1`
 

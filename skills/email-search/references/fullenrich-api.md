@@ -66,7 +66,7 @@ POST /contact/enrich/bulk
 - `company_name` — company name (use `domain` when possible for better accuracy)
 - `webhook_url` — URL for async result delivery (recommended over polling)
 - `webhook_events` — `["contact_finished"]` for per-contact notifications
-- `silentFail` — query param, `true` to skip invalid contacts in batch
+- `silentFail` — query param, `true` to skip invalid contacts quietly
 
 **Response:**
 
@@ -201,7 +201,7 @@ Similar filter structure to people search but with company-level filters.
 Set `webhook_url` in bulk requests. Fullenrich will POST results as they complete:
 - Per-contact: `webhook_events: ["contact_finished"]`
 - Retries: up to 5 times on delivery failure
-- Test with webhook.site
+- Verify delivery using a test endpoint
 
 ## Test Contact (0 credits)
 

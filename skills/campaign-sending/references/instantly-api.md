@@ -152,8 +152,8 @@ Look for `warmup_status` and `reputation_score` in response.
 ## Rate Limits
 
 - 10 requests per second
-- 100 leads per upload batch
-- Add 0.5s delay between batch uploads
+- 100 leads per upload request
+- Add 0.5s pause between consecutive uploads
 
 ## Custom Variables in Email Templates
 

@@ -27,7 +27,7 @@ Provider selection and credentials are handled in Step 0 of the workflow.
    - Deduplication options
    - Custom variable / personalization support
    - Authentication method and credentials
-   - Rate limits and batch sizes
+   - Throughput limits and upload constraints
 3. Ask for their API credentials and confirm access
 4. Plan the field mapping based on the provider's lead schema and confirm with the user before proceeding
 

@@ -30,7 +30,7 @@ After `people-search` finds WHO to contact (with LinkedIn URLs), this skill gets
 
 Extruct base: `https://api.extruct.ai/v1`
 
-Before making API calls, verify Extruct credentials: run `echo $EXTRUCT_API_TOKEN | head -c 5`. If empty, ask the user to provide their Extruct API token and set it via `export EXTRUCT_API_TOKEN=<value>`. Do not proceed until confirmed.
+Before making API calls, check that `EXTRUCT_API_TOKEN` is set by running `test -n "$EXTRUCT_API_TOKEN" && echo "set" || echo "missing"`. If missing, ask the user to provide their Extruct API token and set it via `export EXTRUCT_API_TOKEN=<value>`. Do not proceed until confirmed.
 
 Contact enrichment provider selection and credentials are handled in Step 0 of the workflow.
 
@@ -64,7 +64,7 @@ If the user doesn't know where to start, pre-configured options with local refer
    - Enrichment endpoint (single and bulk)
    - Required input fields (LinkedIn URL, name, domain, etc.)
    - Authentication method and credentials
-   - Rate limits and batch sizes
+   - Throughput limits and request constraints
    - Response format (email, phone, verification status)
    - Credit/pricing model
 3. Ask for their API credentials and confirm access
