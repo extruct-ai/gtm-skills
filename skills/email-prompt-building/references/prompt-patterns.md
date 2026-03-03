@@ -58,20 +58,42 @@ First email + follow-up with different angles.
 
 ---
 
+## Pattern 5: Structural Variants
+
+Select email structure based on the recipient's role and seniority from enrichment data. Different personas need different formats.
+
+**Variants:**
+
+| Variant | Who | Paragraphs | Max words | Notes |
+|---------|-----|------------|-----------|-------|
+| A: Technical Evaluator | CTO, VP Eng, Head of Data | 4 (P1-P4) | 120 | Full structure with proof point PS |
+| B: Founder / CEO | Small company (<50 people) | 3 (P1-P3) | 90 | Merge P2+P4, no separate PS |
+| C: Executive / Board | Chairman, board member, delegates decisions | 2-3 | 70 | Forwardable, one sharp observation |
+| D: Peer Founder | Built something adjacent or competing | 2 | 60 | Peer-to-peer tone, no product pitch |
+
+**Selection logic:**
+- Match on `job_title` or `seniority` from enrichment data
+- If role is ambiguous, default to Variant A
+- Follow-up emails are always 2 paragraphs, ≤60 words regardless of variant
+
+**When to use:** Your list spans multiple seniority levels or includes both operators and executives. Especially important when the same campaign targets both technical evaluators and C-suite.
+
+---
+
 ## Cross-Campaign Defaults
 
 These are starting points. Override per campaign as needed.
 
 | Rule | Default |
 |------|---------|
-| Max words (first email) | 120 |
+| Max words (first email) | Varies by structural variant (60-120) |
 | Max words (follow-up) | 60 |
-| Paragraphs (first email) | 4 |
+| Paragraphs (first email) | Varies by structural variant (2-4) |
 | Paragraphs (follow-up) | 2 |
 | Greeting format | "Hey {FirstName}," |
 | Firm mentions | at most once |
 | Sector naming | always explicit, never "sectors like yours" |
-| Output format | JSON (keys: recipient_name, recipient_company, subject, greeting, first_paragraph...fourth_paragraph) |
+| Output format | JSON (keys: recipient_name, recipient_company, subject, greeting, paragraphs per variant) |
 | Input | CSV row passed as JSON |
 | Prompt location | `claude-code-gtm/prompts/{vertical-slug}/` |
 
@@ -79,7 +101,7 @@ These are starting points. Override per campaign as needed.
 
 After running 2-3 campaigns, distill what worked:
 
-1. Export campaign results from Instantly
+1. Export campaign results from your email sequencer
 2. Identify which P1 angles got replies
 3. Note which proof points resonated
 4. Add the pattern here with the audience, structure, and key phrases that worked

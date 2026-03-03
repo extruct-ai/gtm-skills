@@ -10,11 +10,8 @@ Maintained by [Extruct AI](https://www.extruct.ai).
 
 ## Install
 
-Add the marketplace and install:
-
 ```
-/plugin marketplace add extruct-ai/gtm-skills
-/plugin install gtm-skills
+npx skills add extruct-ai/gtm-skills
 ```
 
 **Where skills live:** Once installed, skills are stored in `~/.claude/skills/`. They become globally available across all your projects. Install once, use everywhere.

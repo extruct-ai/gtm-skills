@@ -83,18 +83,38 @@ This is where the skill does real work. For each section of the prompt:
 - Explain the MECHANISM (why this pain exists), not just the symptom.
 - Include specific numbers from the research (coverage percentages, decay rates, time costs).
 - Write P1 rules that reference enrichment fields by name.
+- NEVER use generic framing like "scores suppliers" or "manages vendors." Use the `platform_type` enrichment field or derive the actual description from the company profile. If the enrichment data doesn't include `platform_type`, instruct the generator to describe what the company actually does based on its description.
+
+**Competitive awareness rules (embed in P1/P2):**
+- If enrichment data or research reveals the prospect company has an existing capability that overlaps with your product:
+  1. NEVER pitch as a replacement. Position as a data layer underneath.
+  2. Acknowledge their existing tool by name in P1.
+  3. Shift P2 from "here's what we do" to "here's what we add to what you already do."
+  4. If the prospect FOUNDED a competing product (career history), either:
+     a. Use Variant D (peer founder) and reference shared context, OR
+     b. Deprioritize. Flag to user as "risky send, needs manual review."
 
 **P2 → from context file → What We Do:**
 - Read the product description, email-safe value prop, and key numbers.
 - Reason about which value angle matters for THIS audience and THIS hypothesis.
 - Write 2-3 hypothesis-matched value angles with the reasoning embedded.
 - Use the email-safe value prop, not the raw version (avoid banned words).
-- Include example queries built from the audience's verticals.
+- Example query rules:
+  - The example query MUST reference a vertical or category the prospect's platform actually serves. Use enrichment data or company description.
+  - NEVER reuse the same example query across different prospects.
+  - Format: "{category} in {geography} under {size constraint}"
 
 **P4 → from context file → Proof Library:**
-- Select 2-3 proof points that match this campaign's audience.
-- For each, write the condition: when to use it, which hypothesis it validates, which role type it resonates with, and WHY.
-- Do NOT include proof points from unrelated audiences.
+
+Select proof points based on THREE dimensions:
+
+| Dimension | Logic |
+|-----------|-------|
+| **Peer relevance** | Proof company should be same size or larger than prospect. Never cite a smaller company as proof to a bigger one. |
+| **Hypothesis alignment** | Proof point should validate the same hypothesis used in P1. |
+| **Non-redundancy** | If a stat appears in P2, do NOT repeat it in P4. |
+
+If no proof point meets all three criteria, drop P4 entirely (use a shorter structural variant instead).
 
 **Banned phrasing → from context file + campaign-specific:**
 - Start with banned words from context file → Voice.
@@ -126,14 +146,23 @@ All grounded in research data.]
 ## Role-based emphasis
 [Map role keywords → emphasis. Use specific data points.]
 
-## Structure (strict)
-[Word limits, paragraph rules]
+## Structural variants
+[Select variant per recipient based on role + seniority from enrichment data.
+See "Structural Variants" section below for definitions.]
 
-P1 — [Rules referencing hypotheses and enrichment fields]
-P2 — [Synthesized value angles per hypothesis. Key numbers from context.
-      Example queries per sub-vertical.]
+## Competitive awareness
+[Rules for handling prospects with overlapping capabilities.]
+
+## Proof point selection
+[Three-dimensional selection: peer relevance, hypothesis alignment, non-redundancy.]
+
+## Example query rules
+[Must reference prospect's actual vertical. Never reuse across prospects.]
+
+P1 — [Rules referencing hypotheses and enrichment fields. Use actual platform description, not generic framing.]
+P2 — [Synthesized value angles per hypothesis. Key numbers from context. Vertical-specific example queries.]
 P3 — [CTA rules with campaign-specific examples]
-P4 — [2-3 proof points from Proof Library with conditions and reasoning]
+P4 — [Proof points with conditions. Drop entirely if no proof meets all three criteria.]
 
 ## Output format
 [JSON keys]
@@ -146,8 +175,11 @@ P4 — [2-3 proof points from Proof Library with conditions and reasoning]
 
 Before saving, verify:
 - [ ] Voice rules come from context file, not hardcoded in this skill
-- [ ] P2 uses product description and numbers from context file
-- [ ] P4 uses proof points from the Proof Library, matched to this campaign's audience
+- [ ] Structural variants are defined with role-based selection logic
+- [ ] P1 uses actual platform description, not generic framing
+- [ ] P2 example queries reference the prospect's actual vertical, not a generic category
+- [ ] P4 proof points pass all three selection criteria (peer relevance, hypothesis alignment, non-redundancy)
+- [ ] Competitive awareness rules are included for prospects with overlapping capabilities
 - [ ] Research data is embedded with actual numbers, not "use the research data"
 - [ ] No references to external files — the email-generation skill only needs this prompt + CSV
 - [ ] Banned words from context file are included in the banned phrasing section
@@ -159,17 +191,33 @@ claude-code-gtm/prompts/{vertical-slug}/en_first_email.md
 claude-code-gtm/prompts/{vertical-slug}/en_follow_up_email.md  (if follow-up needed)
 ```
 
-## Email Structure (defaults)
+## Structural Variants
 
-These are sensible defaults. Override from context file or user input.
+Select structure based on role + seniority from enrichment data. These are defaults. Override from context file or user input.
 
-### First Email
-- 4 paragraphs, ≤120 words total
-- Greeting on its own line
-- P1: sector-specific opener (≤16 words for key line)
-- P2: product value + example query (1-2 sentences)
-- P3: soft CTA — concrete sample, not a meeting (1 sentence)
-- P4: proof/PS — case study from a peer (1 sentence)
+### Variant A: Technical Evaluator (CTO, VP Eng, Head of Data)
+4 paragraphs, ≤120 words.
+- P1: pain with concrete data point
+- P2: product specs (API-first, pricing model, integration)
+- P3: low-effort CTA (sample search, not a meeting)
+- P4: peer proof point (PS)
+
+### Variant B: Founder / CEO (small company, <50 people)
+3 paragraphs, ≤90 words. No PS.
+- P1: pain tied to their specific stage or market move
+- P2: value + proof in one paragraph (merge P2+P4)
+- P3: CTA
+
+### Variant C: Executive / Chairman / Board (delegates decisions)
+2-3 paragraphs, ≤70 words. Forwardable.
+- P1: one sharp observation about their platform
+- P2: one sentence value + CTA combined
+- Optional P3: proof point only if it's a name they'd recognize
+
+### Variant D: Peer Founder (built something adjacent or competing)
+2 paragraphs, ≤60 words. Peer-to-peer tone.
+- P1: acknowledge shared context, state the angle without explaining basics
+- P2: specific offer, no product pitch
 
 ### Follow-up Email
 - 2 paragraphs, ≤60 words total
