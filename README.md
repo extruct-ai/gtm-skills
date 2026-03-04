@@ -25,6 +25,8 @@ Or via [Claude Code](https://docs.anthropic.com/en/docs/claude-code/skills) plug
 
 Skills are stored in `~/.claude/skills/`. Install once, use everywhere across all your projects.
 
+**Updating:** re-run `npx skills add extruct-ai/gtm-skills` to pull the latest version, or `npx skills update` to update all installed skills at once. For the plugin manager, run `/plugin marketplace update` to refresh and get the latest versions.
+
 ### 2. Get your Extruct API token
 
 Sign up at [extruct.ai](https://www.extruct.ai) (free trial with 100 credits) and grab your API token from the dashboard.
