@@ -10,8 +10,17 @@ Maintained by [Extruct AI](https://www.extruct.ai).
 
 ## Install
 
+Via [skills.sh](https://skills.sh) CLI ([repo](https://github.com/vercel-labs/skills)):
+
 ```
 npx skills add extruct-ai/gtm-skills
+```
+
+Or via [Claude Code](https://docs.anthropic.com/en/docs/claude-code/skills) plugin manager:
+
+```
+/plugin marketplace add extruct-ai/gtm-skills
+/plugin install gtm-skills
 ```
 
 **Where skills live:** Once installed, skills are stored in `~/.claude/skills/`. They become globally available across all your projects. Install once, use everywhere.
