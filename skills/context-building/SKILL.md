@@ -36,13 +36,11 @@ Use when no context file exists yet. Walk the user through each section.
 | Section | What to ask | Example |
 |---------|------------|---------|
 | What We Do | Product one-liner, core value prop, email-safe value prop, key lingo, key numbers | Product description + quantifiable claims |
-| Voice | Sender name, tone, language level, hard constraints, scope boundaries | Who emails come from, how they sound |
 | ICP | Customer profiles, company sizes, roles, geographies | Target profiles with size ranges and regions |
 | Win Cases | Past customers, why they bought, what worked | Concrete outcomes with metrics |
 | Proof Library | Pre-written PS sentences for emails, mapped to audience and hypothesis | Ready-to-paste proof points |
 | Campaign History | Past campaigns: vertical, list size, reply rate, learnings | (empty on first run) |
 | Active Hypotheses | Current working hypotheses about what resonates | Pain points validated by campaign data |
-| Do Not Contact | Domains to skip in all future lists. Offer to: (1) run an Extruct search for competitors to auto-populate, (2) accept a CSV of existing customers/partners | Competitors, partners, opt-outs |
 
 **Step 3:** Write the file using the schema from [references/context-schema.md](references/context-schema.md).
 
@@ -54,13 +52,6 @@ Use when no context file exists yet. Walk the user through each section.
 - Email-safe value prop (outreach-friendly version of the value prop)
 - Key numbers (quantifiable claims — database size, speed benchmarks, coverage stats)
 - Key lingo (internal terms and definitions)
-
-**Voice** — must include:
-- Sender name and company (who emails come from)
-- Tone (1 sentence)
-- Language level
-- Hard constraints (numbered list of rules)
-- Scope boundaries (what the product IS and ISN'T)
 
 **Proof Library** — must include:
 - Full PS sentences ready to paste into emails

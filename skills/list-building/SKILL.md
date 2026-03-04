@@ -52,7 +52,7 @@ claude-code-gtm/context/{company}_context.md
 Extract:
 - **ICP profiles** — for query design and filters
 - **Win cases** — for seed companies in lookalike mode
-- **DNC list** — domains to exclude from results
+- **DNC list** — domains to exclude from results. If no DNC list exists in the context file, ask the user: (1) run an Extruct search for competitors to auto-populate, (2) accept a CSV of existing customers/partners, or (3) skip for now
 
 Also check for a hypothesis set at `claude-code-gtm/context/{vertical-slug}/hypothesis_set.md`. If it exists, use the **Search angle** field from each hypothesis to design search queries — these are pre-defined query suggestions tailored to each pain point.
 
