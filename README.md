@@ -1,14 +1,14 @@
 ![Extruct](docs/images/cover.png)
 
-# GTM Skills
+# GTM Skills for Extruct
 
-[Skills](https://docs.anthropic.com/en/docs/claude-code/skills) are reusable prompt templates for Claude Code, Anthropic's agentic coding tool. This pack covers outbound campaigns: research, list building, enrichment, segmentation, email generation, and sending. Use one skill or combine several. Each works independently.
-
-Maintained by [Extruct AI](https://www.extruct.ai).
+Run outbound campaigns end-to-end with [Extruct](https://www.extruct.ai) and [Claude Code](https://docs.anthropic.com/en/docs/claude-code/skills). Research, list building, enrichment, segmentation, email generation, and sending. Use one [skill](https://docs.anthropic.com/en/docs/claude-code/skills) or combine several. Each works independently.
 
 > **These skills are templates.** They show one way to run GTM workflows using Extruct and Claude Code. Fork them, adapt to your workflow, swap out the tools you don't use. The skill patterns are the value, the specific vendor integrations are up to you.
 
-## Install
+## Getting Started
+
+### 1. Install skills
 
 Via [skills.sh](https://skills.sh) CLI ([repo](https://github.com/vercel-labs/skills)):
 
@@ -23,11 +23,25 @@ Or via [Claude Code](https://docs.anthropic.com/en/docs/claude-code/skills) plug
 /plugin install gtm-skills
 ```
 
-**Where skills live:** Once installed, skills are stored in `~/.claude/skills/`. They become globally available across all your projects. Install once, use everywhere.
+Skills are stored in `~/.claude/skills/`. Install once, use everywhere across all your projects.
 
-## Quick Start
+### 2. Get your Extruct API token
 
-After installing, just describe what you need:
+Sign up at [extruct.ai](https://www.extruct.ai) (free trial with 100 credits) and grab your API token from the dashboard.
+
+The token is needed for company search, table creation, enrichment, and people search. Skills that don't call the Extruct API (context-building, hypothesis-building, email-prompt-building, email-generation) work without it.
+
+Set the token in your terminal:
+
+```
+export EXTRUCT_API_TOKEN=<your-token>
+```
+
+If you skip this step, skills will ask for the token in chat when they need it.
+
+### 3. Run your first workflow
+
+Describe what you need in Claude Code:
 
 **Start from your website:**
 
@@ -58,7 +72,7 @@ Each prompt triggers plan mode. Claude will research, ask clarifying questions, 
 
 ## Skills
 
-Building blocks for outbound campaigns. Use one, combine a few, or run them all. No required sequence, each skill works independently.
+Use one, combine a few, or run them all. No required sequence, each skill works independently.
 
 | Skill | Description |
 |-------|-------------|
@@ -114,8 +128,8 @@ claude-code-gtm/
 
 ### Environment Variables
 
-Only the Extruct API token needs to be set upfront. Other providers' credentials are requested in-chat when the corresponding skill runs.
-
 | Variable | Service | Used by |
 |----------|---------|---------|
 | `EXTRUCT_API_TOKEN` | [Extruct API](https://www.extruct.ai/docs) | list-building, list-enrichment, table-creation, people-search, list-segmentation, email-search |
+
+Other providers' credentials (email enrichment, sequencing, deep research) are requested in chat when the corresponding skill runs.
