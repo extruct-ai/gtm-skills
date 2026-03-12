@@ -1,7 +1,7 @@
 ---
 name: list-enrichment
 description: >
-  Add research-powered enrichment columns to Extruct company tables via the API.
+  Add research-powered enrichment columns to Extruct company tables.
   Use when the user wants to add enrichment columns (e.g. funding, verticals,
   tech stack) to an existing Extruct table, run column configs from
   enrichment-design, or monitor enrichment progress. Triggers on: "enrich",
@@ -13,35 +13,21 @@ description: >
 
 Add research-powered enrichment columns to Extruct company tables.
 
-## Environment
+## Extruct API Operations
 
-| Variable | Service |
-|----------|---------|
-| `EXTRUCT_API_TOKEN` | Extruct API |
+This skill delegates all Extruct API calls to the `extruct-api` skill.
 
-Before making API calls, check that `EXTRUCT_API_TOKEN` is set by running `test -n "$EXTRUCT_API_TOKEN" && echo "set" || echo "missing"`. If missing, ask the user to provide their Extruct API token and set it via `export EXTRUCT_API_TOKEN=<value>`. Do not proceed until confirmed.
+**Resolution order:**
+1. If the `extruct-api` skill is installed (via `/plugin install extruct-skills`), use it directly for all Extruct operations
+2. Otherwise, read the skill instructions from GitHub and follow them: https://github.com/extruct-ai/skills/blob/main/skills/extruct-api/SKILL.md
 
-Base URL: `https://api.extruct.ai/v1`
-
-## Official API Reference
-
-- https://www.extruct.ai/docs
+All table reads, column creation, enrichment runs, polling, and data fetching are handled by the extruct-api skill. This skill focuses on **what** to enrich and **how to design columns** — the extruct-api skill handles the API execution.
 
 ## Workflow
 
-### Step 0: Verify API reference
-
-1. Read local reference: [references/api_reference.md](references/api_reference.md)
-2. Fetch live docs: https://www.extruct.ai/docs
-3. Compare endpoints, params, and response fields
-4. If discrepancies found:
-   - Update the local reference file
-   - Flag changes to the user before proceeding
-5. Proceed with the skill workflow
-
 ### 1. Confirm the table
 
-Get the table ID from the user (URL or ID). Fetch table metadata via `GET /tables/{table_id}`. Show the user: table name, row count, existing columns.
+Get the table ID from the user (URL or ID). Use the extruct-api skill to fetch table metadata. Show the user: table name, row count, existing columns.
 
 ### 2. Get column configs
 
@@ -79,19 +65,15 @@ Craft a clear prompt using `{input}` for the row's domain value. Prompt guidelin
 
 ### 4. Create the column(s)
 
-Create columns via `POST /tables/{table_id}/columns` with the `column_configs` array.
+Delegate column creation to the extruct-api skill with the `column_configs` array.
 
 ### 5. Trigger enrichment (only the new columns)
 
-Run via `POST /tables/{table_id}/run` with `{ "mode": "new", "columns": [new_column_ids] }`.
-
-**Important:** Always scope the run to the newly created column(s) only. Avoid broad or implicit run payloads when you only intend to enrich specific columns.
-
-Report: run ID, rows queued, and table URL.
+Delegate the enrichment run to the extruct-api skill. Always scope the run to the newly created column(s) only. Avoid broad or implicit run payloads when you only intend to enrich specific columns.
 
 ### 6. Monitor progress
 
-Poll the table data via `GET /tables/{table_id}/data` every 30 seconds. For each row, check the `status` field of the relevant column cells (`done`, `pending`, `failed`).
+Delegate progress monitoring to the extruct-api skill. Use it to poll table data and check cell statuses.
 
 Show the user:
 - Current % complete (done cells / total cells)
@@ -113,7 +95,3 @@ If quality issues are found:
 1. Delete the problematic column
 2. Adjust the prompt
 3. Re-create and re-run
-
-## API Reference
-
-See [references/api_reference.md](references/api_reference.md) for full API spec: all output formats, agent types, prompt variables, and endpoints.

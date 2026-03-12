@@ -13,31 +13,17 @@ description: >
 
 End-to-end workflow: parse company data → create/reuse Extruct table → upload rows → add columns → run enrichment.
 
-## Environment
+## Extruct API Operations
 
-| Variable | Service |
-|----------|---------|
-| `EXTRUCT_API_TOKEN` | Extruct API |
+This skill delegates all Extruct API calls to the `extruct-api` skill.
 
-Before making API calls, check that `EXTRUCT_API_TOKEN` is set by running `test -n "$EXTRUCT_API_TOKEN" && echo "set" || echo "missing"`. If missing, ask the user to provide their Extruct API token and set it via `export EXTRUCT_API_TOKEN=<value>`. Do not proceed until confirmed.
+**Resolution order:**
+1. If the `extruct-api` skill is installed (via `/plugin install extruct-skills`), use it directly for all Extruct operations
+2. Otherwise, read the skill instructions from GitHub and follow them: https://github.com/extruct-ai/skills/blob/main/skills/extruct-api/SKILL.md
 
-Base URL: `https://api.extruct.ai/v1`
-
-## Official API Reference
-
-- https://www.extruct.ai/docs
+All table creation, row uploads, column creation, and enrichment runs are handled by the extruct-api skill. This skill focuses on **parsing input data** and **orchestrating the flow** — the extruct-api skill handles the API execution.
 
 ## Workflow
-
-### Step 0: Verify API reference
-
-1. Read local reference: [../list-enrichment/references/api_reference.md](../list-enrichment/references/api_reference.md)
-2. Fetch live docs: https://www.extruct.ai/docs
-3. Compare endpoints, params, and response fields (especially `POST /tables`, `POST /tables/{id}/rows`, `POST /tables/{id}/columns`)
-4. If discrepancies found:
-   - Update the local reference file
-   - Flag changes to the user before proceeding
-5. Proceed with the skill workflow
 
 ### 1. Parse input data
 
@@ -47,7 +33,7 @@ Accept data in any of these formats:
 
 **CSV file**: Read CSV, map columns to find the URL/domain column.
 
-**Extruct table URL**: Fetch data from existing table via API.
+**Extruct table URL**: Use the extruct-api skill to fetch data from existing table.
 
 Key rules:
 - Skip entries with no URL (e.g., "Stealth" companies)
@@ -57,20 +43,18 @@ Key rules:
 ### 2. Decide: create new table or add to existing
 
 Ask the user:
-- **New table**: Create via `POST /tables`
+- **New table**: Delegate to the extruct-api skill to create a company table
 - **Existing table**: User provides table ID or URL (`https://app.extruct.ai/tables/{id}`)
 
-To create a new company table, use `POST /tables` with `kind: "company"` and a single input column (`kind: "input"`, `key: "input"`). The `company` kind auto-enriches each domain with Company Profile, Company Name, and Company Website columns.
+### 3. Upload rows
 
-### 3. Upload rows in batches
+Delegate row upload to the extruct-api skill with the parsed domains.
 
-Upload domains via `POST /tables/{table_id}/rows` in batches of 50. Each row: `{ "data": { "input": "domain.com" } }`. Add 0.5s delay between batches.
-
-Report progress: "Batch 1: uploaded 50 rows OK"
+Report progress to the user.
 
 ### 4. Add agent columns (optional)
 
-If the user wants enrichment columns (industry, funding, etc.), add them after upload via `POST /tables/{table_id}/columns`.
+If the user wants enrichment columns (industry, funding, etc.), delegate column creation to the extruct-api skill.
 
 **Column types by use case:**
 
@@ -87,7 +71,7 @@ See the [list-enrichment skill](../list-enrichment/SKILL.md) for full column typ
 
 ### 5. Trigger enrichment
 
-Run via `POST /tables/{table_id}/run` with `{ "mode": "new", "columns": [new_column_ids] }`, scoped to only the newly added agent columns.
+Delegate the enrichment run to the extruct-api skill, scoped to only the newly added agent columns.
 
 If no agent columns were added, skip this step.
 
@@ -133,6 +117,4 @@ Direct upload — each line is a domain.
 - **Domain format**: Strip protocol and trailing slash. `https://www.example.com/` → `example.com`
 - **Stealth companies**: Skip — no domain to enrich
 - **Duplicates**: Deduplicate by domain before upload
-- **Batch limits**: Max 50 rows per API call
 - **Column labels**: For `select`/`multiselect`, collect unique values from user data to build the label list
-- **Run timing**: Trigger run AFTER all rows and columns are added
