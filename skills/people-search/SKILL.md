@@ -25,9 +25,7 @@ After you know WHICH companies to target, this skill finds WHO to contact. The n
 
 This skill delegates all Extruct API calls to the `extruct-api` skill.
 
-**Resolution order:**
-1. If the `extruct-api` skill is installed (via `/plugin install extruct-skills`), use it directly for all Extruct operations
-2. Otherwise, read the skill instructions from GitHub and follow them: https://github.com/extruct-ai/skills/blob/main/skills/extruct-api/SKILL.md
+For all Extruct API operations, read and follow the instructions in `skills/extruct-api/SKILL.md`.
 
 All table reads, column creation (including `company_people_finder`), enrichment runs, child table discovery, and data fetching are handled by the extruct-api skill. This skill focuses on **who** to search for and **role strategy** — the extruct-api skill handles the API execution.
 

@@ -24,9 +24,7 @@ Take an enriched table + hypothesis set and produce a tiered, segmented list. Th
 
 This skill delegates all Extruct API calls to the `extruct-api` skill.
 
-**Resolution order:**
-1. If the `extruct-api` skill is installed (via `/plugin install extruct-skills`), use it directly for all Extruct operations
-2. Otherwise, read the skill instructions from GitHub and follow them: https://github.com/extruct-ai/skills/blob/main/skills/extruct-api/SKILL.md
+For all Extruct API operations, read and follow the instructions in `skills/extruct-api/SKILL.md`.
 
 The only Extruct operation in this skill is fetching enriched table data. Everything else is pure reasoning.
 

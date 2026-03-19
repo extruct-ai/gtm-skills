@@ -45,6 +45,8 @@ Using the chosen provider's API:
 - List existing campaigns
 - Create a new campaign if needed (suggest name based on vertical + date)
 
+Ask the user to specify the campaign based on **region** and **time zone** — leads in different regions/time zones should go into separate campaigns so sending schedules align with recipients' local business hours.
+
 Ask the user: use an existing campaign or create a new one?
 
 ### Step 4: Map fields to provider lead schema

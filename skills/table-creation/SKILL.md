@@ -17,9 +17,7 @@ End-to-end workflow: parse company data → create/reuse Extruct table → uploa
 
 This skill delegates all Extruct API calls to the `extruct-api` skill.
 
-**Resolution order:**
-1. If the `extruct-api` skill is installed (via `/plugin install extruct-skills`), use it directly for all Extruct operations
-2. Otherwise, read the skill instructions from GitHub and follow them: https://github.com/extruct-ai/skills/blob/main/skills/extruct-api/SKILL.md
+For all Extruct API operations, read and follow the instructions in `skills/extruct-api/SKILL.md`.
 
 All table creation, row uploads, column creation, and enrichment runs are handled by the extruct-api skill. This skill focuses on **parsing input data** and **orchestrating the flow** — the extruct-api skill handles the API execution.
 
