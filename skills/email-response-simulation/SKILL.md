@@ -23,6 +23,18 @@ email-generation → email-response-simulation → campaign-sending
 
 Run this for Tier 1 prospects only — the ones worth individual attention. For Tier 2, use templates from `email-generation` directly.
 
+## Scraping Tell Detection
+
+During the simulation, check the email for signals that reveal the data was scraped from LinkedIn or a database. These are instant credibility killers — the prospect recognizes them and mentally files the email as automated spam.
+
+Common tells to flag:
+- **Titles left in names** — "Hey Dr. Martinez" or "Hi Prof. Chen" screams LinkedIn scrape. Real humans say "Hey Carlos"
+- **Over-formal name usage** — using full name ("Dear Jonathan Smith") instead of first name
+- **LinkedIn headline as job title** — if the email references a title that's clearly copy-pasted from LinkedIn (e.g. "As a Serial Entrepreneur | Angel Investor | Speaker")
+- **Stale data** — referencing a role or company the prospect has already left
+
+Flag these as **High severity** risk flags in Phase 4. Any scraping tell detected should be called out in the Emotional Reaction (Phase 3, Pass 1) as an immediate red flag.
+
 ## When to Use
 
 - After `email-generation` produces a draft for a Tier 1 company
@@ -168,6 +180,7 @@ Identify specific issues in the copy that reduce reply probability.
 - **Tone clash** — email tone doesn't match how this person communicates
 - **Credibility gap** — proof point doesn't resonate with this type of buyer
 - **Length violation** — too long for their inbox behavior
+- **Scraping tell** — name, title, or data reveals it was pulled from LinkedIn or a database (titles left in names, LinkedIn headline as job title, stale role data)
 
 ### Phase 5: Output
 

@@ -22,17 +22,13 @@ list-segmentation → people-search → email-search → email-generation → em
 
 After `people-search` finds WHO to contact (with LinkedIn URLs), this skill gets their verified contact info.
 
-## Environment
+## Extruct API Operations
 
-| Variable | Service |
-|----------|---------|
-| `EXTRUCT_API_TOKEN` | Extruct API (read people table) |
+This skill delegates all Extruct API calls to the `extruct-api` skill.
 
-Extruct base: `https://api.extruct.ai/v1`
+For all Extruct API operations, read and follow the instructions in `skills/extruct-api/SKILL.md`.
 
-Before making API calls, check that `EXTRUCT_API_TOKEN` is set by running `test -n "$EXTRUCT_API_TOKEN" && echo "set" || echo "missing"`. If missing, ask the user to provide their Extruct API token and set it via `export EXTRUCT_API_TOKEN=<value>`. Do not proceed until confirmed.
-
-Contact enrichment provider selection and credentials are handled in Step 0 of the workflow.
+The only Extruct operation in this skill is reading people table data. Contact enrichment uses separate providers (Prospeo, Fullenrich, etc.) with their own APIs.
 
 ## Inputs
 
@@ -72,7 +68,7 @@ If the user doesn't know where to start, pre-configured options with local refer
 
 ### Step 1: Load people data
 
-**Option A: From Extruct people table (recommended)** — Fetch data via `GET /tables/{people_table_id}/data`. Extract `full_name`, `profile_url`, `role`, and `parent_row_id` from each row. Split full name into first/last.
+**Option A: From Extruct people table (recommended)** — Use the extruct-api skill to fetch data from the people table. Extract `full_name`, `profile_url`, `role`, and `parent_row_id` from each row. Split full name into first/last.
 
 **Option B: From CSV** — Read `claude-code-gtm/csv/input/{campaign}/people_linkedin.csv`.
 

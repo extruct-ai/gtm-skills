@@ -20,25 +20,19 @@ Take an enriched table + hypothesis set and produce a tiered, segmented list. Th
 | Hypothesis set | `claude-code-gtm/context/{vertical-slug}/hypothesis_set.md` or context file | yes |
 | Context file | `claude-code-gtm/context/{company}_context.md` | recommended |
 
-## Environment
+## Extruct API Operations
 
-| Variable | Service |
-|----------|---------|
-| `EXTRUCT_API_TOKEN` | Extruct API |
+This skill delegates all Extruct API calls to the `extruct-api` skill.
 
-Before making API calls, check that `EXTRUCT_API_TOKEN` is set by running `test -n "$EXTRUCT_API_TOKEN" && echo "set" || echo "missing"`. If missing, ask the user to provide their Extruct API token and set it via `export EXTRUCT_API_TOKEN=<value>`. Do not proceed until confirmed.
+For all Extruct API operations, read and follow the instructions in `skills/extruct-api/SKILL.md`.
 
-Base URL: `https://api.extruct.ai/v1`
-
-## Official API Reference
-
-- https://www.extruct.ai/docs
+The only Extruct operation in this skill is fetching enriched table data. Everything else is pure reasoning.
 
 ## Workflow
 
 ### Step 1: Load data
 
-Fetch enriched table data via `GET /tables/{table_id}/data`. Parse all rows and their enrichment column values.
+Use the extruct-api skill to fetch enriched table data. Parse all rows and their enrichment column values.
 
 Read the hypothesis set file. Parse each hypothesis into:
 - Number and short name

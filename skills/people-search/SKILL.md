@@ -21,15 +21,13 @@ list-segmentation → people-search → email-search → email-generation → em
 
 After you know WHICH companies to target, this skill finds WHO to contact. The next step (`email-search`) gets their verified emails and phones.
 
-## Environment
+## Extruct API Operations
 
-| Variable | Service |
-|----------|---------|
-| `EXTRUCT_API_TOKEN` | Extruct API |
+This skill delegates all Extruct API calls to the `extruct-api` skill.
 
-Before making API calls, check that `EXTRUCT_API_TOKEN` is set by running `test -n "$EXTRUCT_API_TOKEN" && echo "set" || echo "missing"`. If missing, ask the user to provide their Extruct API token and set it via `export EXTRUCT_API_TOKEN=<value>`. Do not proceed until confirmed.
+For all Extruct API operations, read and follow the instructions in `skills/extruct-api/SKILL.md`.
 
-Base URL: `https://api.extruct.ai/v1`
+All table reads, column creation (including `company_people_finder`), enrichment runs, child table discovery, and data fetching are handled by the extruct-api skill. This skill focuses on **who** to search for and **role strategy** — the extruct-api skill handles the API execution.
 
 ## Inputs
 
@@ -41,19 +39,9 @@ Base URL: `https://api.extruct.ai/v1`
 
 ## Workflow
 
-### Step 0: Verify API reference
-
-1. Read local reference: [references/api_reference.md](references/api_reference.md)
-2. Fetch live docs: https://www.extruct.ai/docs
-3. Compare endpoints, params, and response fields (especially `company_people_finder` column type and child table behavior)
-4. If discrepancies found:
-   - Update the local reference file
-   - Flag changes to the user before proceeding
-5. Proceed with the skill workflow
-
 ### Step 1: Confirm the table
 
-Fetch table metadata via `GET /tables/{table_id}`. Show the user: table name, kind, row count.
+Use the extruct-api skill to fetch table metadata. Show the user: table name, kind, row count.
 
 ### Step 2: Define roles
 
@@ -87,67 +75,26 @@ claude-code-gtm/context/{company}_context.md → ## ICP → Roles column
 
 ### Step 3: Add company_people_finder column
 
-Create a `company_people_finder` column on the table via `POST /tables/{table_id}/columns`.
-
-Column config shape:
-
-```json
-{
-  "kind": "company_people_finder",
-  "name": "Key Decision Makers",
-  "key": "decision_makers",
-  "value": {
-    "roles": ["VP Sales", "Head of Sales", "Revenue Operations"],
-    "provider": "research_pro",
-    "max_results": 5
-  }
-}
-```
-
-| Param | Description | Recommended |
-|-------|-------------|-------------|
-| `roles` | Broad role descriptions to search for | 3-7 roles |
-| `provider` | Search provider | `research_pro` (always) |
-| `max_results` | Max people per company | 3-5 (more = slower + noisier) |
+Delegate to the extruct-api skill to add a `company_people_finder` column to the table with:
+- **roles** — the expanded role list from Step 2
+- **provider** — `research_pro` (always)
+- **max_results** — 3-5 per company (more = slower + noisier)
 
 ### Step 4: Trigger enrichment run
 
-Run the new column via `POST /tables/{table_id}/run` scoped to the new column ID. Report: run ID and cells queued.
+Delegate to the extruct-api skill to run the new column.
 
 ### Step 5: Monitor and discover child table
 
-The `company_people_finder` column auto-creates a **child people table**. Fetch the parent table metadata and look at `child_relationships` for a relationship with `relationship_type: "company_people"`. That gives you the people table ID.
-
-The child people table has auto-created columns:
-
-| Column | Key | Kind | Description |
-|--------|-----|------|-------------|
-| Person Input | `input` | input | Raw person context string |
-| Full Name | `full_name` | agent | Parsed full name |
-| Role | `role` | agent | Current role/title |
-| Profile URL | `profile_url` | agent (url) | LinkedIn URL |
+The `company_people_finder` column auto-creates a **child people table**. Use the extruct-api skill to fetch the parent table metadata and discover the child people table via `child_relationships`.
 
 ### Step 6: Optionally add LinkedIn data column
 
-For richer profile data (experience, education, skills), add a `linkedin` agent column to the people table. Config:
-
-```json
-{
-  "kind": "agent",
-  "key": "linkedin_data",
-  "name": "LinkedIn Data",
-  "value": {
-    "agent_type": "linkedin",
-    "prompt": "{profile_url}"
-  }
-}
-```
-
-This is optional — skip if you only need name + role + LinkedIn URL for the `email-search` step.
+For richer profile data (experience, education, skills), use the extruct-api skill to add a `linkedin` agent column to the people table. This is optional — skip if you only need name + role + LinkedIn URL for the `email-search` step.
 
 ### Step 7: Fetch and review people data
 
-Fetch data from the people table via `GET /tables/{people_table_id}/data`. Extract `full_name`, `role`, `profile_url`, and `parent_row_id` from each row.
+Use the extruct-api skill to fetch data from the people table.
 
 Present summary:
 - Total companies in table: N
@@ -182,10 +129,6 @@ The `email-search` skill takes this CSV (or reads the people table directly) and
 ## Key Table IDs to Pass Forward
 
 After this skill completes, pass these to `email-search`:
-- **People table ID** — for direct API access to people data
+- **People table ID** — for direct access to people data
 - **Parent table ID** — for cross-referencing company data
 - **Campaign slug** — for file paths
-
-## API Reference
-
-See [references/api_reference.md](references/api_reference.md) for the full `company_people_finder` column spec, child table behavior, and people table columns.

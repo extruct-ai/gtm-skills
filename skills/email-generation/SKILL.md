@@ -42,6 +42,18 @@ The prompt template specifies which columns it needs. Check the prompt's "Enrich
 **Enrichment (campaign-specific):**
 Listed in the prompt template. If the prompt references a field that's not in the CSV, the email quality degrades. Check column alignment before running.
 
+## Name Sanitization
+
+Before generating emails, run `scripts/sanitize-names.py` on the contact CSV:
+
+```bash
+python3 scripts/sanitize-names.py <contact.csv> [output.csv]
+```
+
+The script strips titles (`Dr`, `Prof`, etc.), removes rows with single-character names, emoji, junk values (`N/A`, `Test`, `-`), and fixes all-caps casing. It outputs a `*_sanitized.csv` and prints what was cleaned/removed.
+
+Review the removed rows before proceeding. Do not generate emails for rows with invalid names.
+
 ## Running the Generator
 
 ### Option A: In-chat generation (< 30 contacts)

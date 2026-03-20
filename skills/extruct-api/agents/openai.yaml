@@ -1,0 +1,7 @@
+interface:
+  display_name: "Extruct API"
+  short_description: "Company discovery, Deep Search, AI tables, enrichment, and people workflows"
+  icon_small: "./assets/logo.svg"
+  icon_large: "./assets/logo.svg"
+  brand_color: "#4D56F3"
+  default_prompt: "Use Extruct API to search, enrich, or operate on Extruct companies, tables, or people workflows."
