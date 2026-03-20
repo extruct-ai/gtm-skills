@@ -90,8 +90,12 @@ Use one, combine a few, or run them all. No required sequence, each skill works 
 | **email-search** | Get verified emails + phones via contact enrichment providers |
 | **email-prompt-building** | Build self-contained prompt template for a campaign. **Edit this skill to change email structure** (paragraph count, word limits, format). |
 | **email-generation** | Generate emails from prompt + CSV (tier-aware) |
+| **email-verification** | Validate emails via verification provider before sending |
 | **email-response-simulation** | Simulate prospect reading your email (Tier 1 review) |
 | **campaign-sending** | Upload leads for sequencing and sending |
+| **competitor-monitoring** | Track competitors with enrichment-powered monitoring tables |
+| **post-engagers** | Extract engagers from any LinkedIn post and load into Extruct |
+| **extruct-api** | Bundled Extruct API reference — used by other skills for all API operations |
 
 ## About Extruct
 

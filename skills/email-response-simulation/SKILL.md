@@ -23,6 +23,10 @@ email-generation → email-response-simulation → campaign-sending
 
 Run this for Tier 1 prospects only — the ones worth individual attention. For Tier 2, use templates from `email-generation` directly.
 
+## Name Sanitization
+
+Before running simulation, verify the prospect name is clean. If not already sanitized by `email-generation`, apply the same rules: strip titles (`Dr`, `Prof`, etc.), reject single-character names, emoji, or junk values (`N/A`, `Test`, `-`), and fix all-caps casing.
+
 ## When to Use
 
 - After `email-generation` produces a draft for a Tier 1 company

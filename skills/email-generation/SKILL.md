@@ -42,6 +42,22 @@ The prompt template specifies which columns it needs. Check the prompt's "Enrich
 **Enrichment (campaign-specific):**
 Listed in the prompt template. If the prompt references a field that's not in the CSV, the email quality degrades. Check column alignment before running.
 
+## Name Sanitization
+
+Before generating emails, clean the `first_name` and `last_name` fields. Bad name data breaks personalization and makes outreach look spammy.
+
+Flag or remove entries with:
+
+- **Titles and prefixes** — strip `Dr`, `Mr`, `Mrs`, `Prof`, `Eng`, etc.
+- **Single-character names** — flag names that are just one letter (e.g. `J`, `A`)
+- **Emoji or special characters** — remove entries where names contain emoji, unicode symbols, or non-letter characters
+- **Placeholder/junk values** — remove entries with names like `N/A`, `Test`, `Unknown`, `-`, `.`
+- **All-caps names** — convert to proper case (e.g. `JOHN` → `John`)
+
+Report: `{N} names cleaned, {M} entries removed due to invalid names`
+
+Present removed entries to the user before discarding so they can override if needed. Do not generate emails for entries with invalid names.
+
 ## Running the Generator
 
 ### Option A: In-chat generation (< 30 contacts)

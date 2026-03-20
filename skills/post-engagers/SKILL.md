@@ -1,22 +1,22 @@
 ---
-name: competitor-post-engagers
+name: post-engagers
 description: >
-  Extract people who engage (comment, react, repost) on competitor LinkedIn posts,
+  Extract people who engage (comment, react, repost) on any LinkedIn post,
   enrich their emails and company data, and upload to an Extruct people table for outreach.
   Supports multiple LinkedIn scraping providers (Anysite MCP, RapidAPI, Apify, Phantombuster, etc.).
-  Triggers on: "competitor engagers", "competitor post", "post engagers",
-  "who commented on", "who liked", "who reacted", "steal audience",
-  "competitor audience", "linkedin post engagers".
+  Triggers on: "post engagers", "linkedin engagers", "who commented on",
+  "who liked", "who reacted", "linkedin post engagers", "scrape post",
+  "extract engagers", "post commenters".
 ---
 
-# Competitor Post Engagers
+# LinkedIn Post Engagers
 
-Turn competitor LinkedIn post engagement into a prospecting list. Extract commenters, reactors, and reposters — then enrich and upload to Extruct for outreach.
+Turn LinkedIn post engagement into a prospecting list. Extract commenters, reactors, and reposters from any LinkedIn post — then enrich and upload to Extruct for outreach.
 
 ## Related Skills
 
 ```
-competitor-post-engagers → email-search → email-generation → campaign-sending
+post-engagers → email-search → email-generation → campaign-sending
 ```
 
 This skill produces a people table. The next step (`email-search`) gets verified emails, then `email-generation` drafts personalized outreach.
@@ -141,7 +141,7 @@ Create a new Extruct generic table or append to an existing one. Delegate to the
 
 ```json
 {
-  "name": "{user-provided name or 'Competitor Post Engagers - {date}'}",
+  "name": "{user-provided name or 'Post Engagers - {date}'}",
   "kind": "generic",
   "column_configs": [
     {"kind": "input", "name": "Full Name", "key": "full_name"},
@@ -182,11 +182,11 @@ Suggest next steps:
 - **"Get emails"** → run `email-search` on the people table to enrich with verified emails
 - **"Enrich companies"** → run `list-enrichment` to add company data (industry, size, funding)
 - **"Draft outreach"** → run `email-generation` after emails are found
-- **"Monitor more posts"** → re-run with additional competitor post URLs and deduplicate against this table
+- **"Monitor more posts"** → re-run with additional post URLs and deduplicate against this table
 
 ## Tips
 
-- **Multiple posts = richer list.** Scrape 3-5 recent posts from the same competitor to build a larger pool. Engagers across multiple posts are highly engaged — flag them.
+- **Multiple posts = richer list.** Scrape 3-5 recent posts from the same account to build a larger pool. Engagers across multiple posts are highly engaged — flag them.
 - **Repeat engagers are warmer leads.** If someone engaged on 2+ posts, note that in the data — they're more likely to respond to outreach.
 - **Filter aggressively.** Not all engagers are prospects. Use segment filtering to focus on decision makers and skip students, recruiters, etc.
 - **Respect rate limits.** LinkedIn scraping providers have varying rate limits. Don't hammer the API — space out requests if scraping many posts.
@@ -196,4 +196,4 @@ Suggest next steps:
 | Output | Format | Location |
 |--------|--------|----------|
 | People table | Extruct generic table | `https://app.extruct.ai/tables/{table_id}` |
-| Engagers CSV | CSV backup | `claude-code-gtm/csv/input/{campaign}/competitor_engagers.csv` |
+| Engagers CSV | CSV backup | `claude-code-gtm/csv/input/{campaign}/post_engagers.csv` |
