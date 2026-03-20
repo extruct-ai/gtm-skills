@@ -25,7 +25,7 @@ Run this for Tier 1 prospects only — the ones worth individual attention. For 
 
 ## Name Sanitization
 
-Before running simulation, verify the prospect name is clean. If not already sanitized by `email-generation`, apply the same rules: strip titles (`Dr`, `Prof`, etc.), reject single-character names, emoji, or junk values (`N/A`, `Test`, `-`), and fix all-caps casing.
+Before running simulation, verify the prospect name is clean. If not already sanitized by `email-generation`, run `skills/email-generation/scripts/sanitize-names.py` on the contact CSV first.
 
 ## When to Use
 

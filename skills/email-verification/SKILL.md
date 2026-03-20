@@ -34,7 +34,7 @@ Provider selection and credentials are handled in Step 0 of the workflow.
 
 ### Step 0: Confirm provider and learn API
 
-1. Ask the user which email verification provider they want to use. If they're unsure, pre-configured options with local reference docs are available in [references/](references/).
+1. Ask the user which email verification provider they want to use.
 2. Fetch or read the provider's API documentation and identify:
    - Credit check endpoint
    - Single email validation endpoint
@@ -107,4 +107,4 @@ If no campaigns are provided, skip this step and note that the user should remov
 
 ## API References
 
-Pre-configured provider docs in [references/](references/) directory. For other providers, docs are fetched during Step 0.
+Provider API docs are fetched or read during Step 0. No pre-configured provider docs are bundled — add them to `references/` as needed.

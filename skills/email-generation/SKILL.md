@@ -44,19 +44,15 @@ Listed in the prompt template. If the prompt references a field that's not in th
 
 ## Name Sanitization
 
-Before generating emails, clean the `first_name` and `last_name` fields. Bad name data breaks personalization and makes outreach look spammy.
+Before generating emails, run `scripts/sanitize-names.py` on the contact CSV:
 
-Flag or remove entries with:
+```bash
+python3 scripts/sanitize-names.py <contact.csv> [output.csv]
+```
 
-- **Titles and prefixes** — strip `Dr`, `Mr`, `Mrs`, `Prof`, `Eng`, etc.
-- **Single-character names** — flag names that are just one letter (e.g. `J`, `A`)
-- **Emoji or special characters** — remove entries where names contain emoji, unicode symbols, or non-letter characters
-- **Placeholder/junk values** — remove entries with names like `N/A`, `Test`, `Unknown`, `-`, `.`
-- **All-caps names** — convert to proper case (e.g. `JOHN` → `John`)
+The script strips titles (`Dr`, `Prof`, etc.), removes rows with single-character names, emoji, junk values (`N/A`, `Test`, `-`), and fixes all-caps casing. It outputs a `*_sanitized.csv` and prints what was cleaned/removed.
 
-Report: `{N} names cleaned, {M} entries removed due to invalid names`
-
-Present removed entries to the user before discarding so they can override if needed. Do not generate emails for entries with invalid names.
+Review the removed rows before proceeding. Do not generate emails for rows with invalid names.
 
 ## Running the Generator
 
