@@ -1,10 +1,10 @@
 ![Extruct](docs/images/cover.png)
 
-# GTM Skills for Extruct
+# GTM Skills by Extruct
 
 Run outbound campaigns end-to-end with [Extruct](https://www.extruct.ai) and [Claude Code](https://docs.anthropic.com/en/docs/claude-code/skills). Research, list building, enrichment, segmentation, email generation, and sending. Use one [skill](https://docs.anthropic.com/en/docs/claude-code/skills) or combine several. Each works independently.
 
-> **These skills are templates.** They show one way to run GTM workflows using Extruct and Claude Code. Fork them, adapt to your workflow, swap out the tools you don't use. The skill patterns are the value, the specific vendor integrations are up to you.
+For updates, follow [Danny Chepenko on LinkedIn](https://br.linkedin.com/in/danielchepenko).
 
 ## Getting Started
 
@@ -93,6 +93,7 @@ Use one, combine a few, or run them all. No required sequence, each skill works 
 | **email-verification** | Validate emails via verification provider before sending |
 | **email-response-simulation** | Simulate prospect reading your email (Tier 1 review) |
 | **campaign-sending** | Upload leads for sequencing and sending |
+| **inbox-reply** | Manage and reply to lead responses in the email sequencing inbox |
 | **competitor-monitoring** | Track competitors with enrichment-powered monitoring tables |
 | **post-engagers** | Extract engagers from any LinkedIn post and load into Extruct |
 | **extruct-api** | Bundled Extruct API reference — used by other skills for all API operations |
