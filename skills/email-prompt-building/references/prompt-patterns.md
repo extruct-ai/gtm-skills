@@ -43,7 +43,35 @@ Use a shared event as the opener.
 
 ---
 
-## Pattern 4: Multi-Email Sequence
+## Pattern 4: Genuine Curiosity (Question-First P1)
+
+Open with a real question derived from enrichment data — not a statement with a question mark bolted on.
+
+**Structure:**
+- P1 is a single question. The question must be:
+  - Genuinely answerable (you don't already know the answer)
+  - Grounded in something specific you observed in their enrichment data (job change, company growth, product launch, coverage gap)
+  - NOT a restatement of their pain dressed as a question
+- P2 is a short value bridge: what made you curious + what you do, in plain language
+- P3 is a concrete CTA (sample, not a meeting)
+
+**Bad examples (statement-first disguised as questions):**
+- "Are you struggling with data coverage in APAC?" (you're telling them their pain)
+- "Did you know that 40% of trade show contacts decay within 90 days?" (rhetorical)
+- "Wouldn't it be great if you could search 100M+ companies?" (leading)
+
+**Good examples (genuine curiosity):**
+- "Your team added three APAC markets last year — are you sourcing those suppliers locally or from a central database?"
+- "I saw you just launched a materials procurement vertical — how are you building the supplier directory for that?"
+- "Noticed your platform covers DACH but not Nordics yet — is that a data availability issue or a demand priority call?"
+
+**Key rule:** If you could answer your own question from the enrichment data, it's not genuine curiosity — it's a statement with a question mark. The question must ask about something you genuinely cannot see from the outside.
+
+**When to use:** Best for senior prospects (VP+) and founders who ignore statement-first pitches. Works especially well when enrichment data reveals a recent move (expansion, product launch, hire) that creates a natural opening. Prefer this pattern over Pain-Theme for audiences that are self-aware about their pain and don't need it named.
+
+---
+
+## Pattern 5: Multi-Email Sequence
 
 First email + follow-up with different angles.
 
@@ -58,7 +86,7 @@ First email + follow-up with different angles.
 
 ---
 
-## Pattern 5: Structural Variants
+## Pattern 6: Structural Variants
 
 Select email structure based on the recipient's role and seniority from enrichment data. Different personas need different formats.
 

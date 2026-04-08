@@ -56,24 +56,27 @@ Review the removed rows before proceeding. Do not generate emails for rows with 
 
 ## Running the Generator
 
-### Option A: In-chat generation (< 30 contacts)
+**Script-first, not in-context.** Always generate via a script that calls the API per contact. Never generate emails inside the conversation — it's slow, expensive, and impossible to rerun after prompt edits.
 
-1. Read the prompt template
-2. Read the contact CSV
-3. For each row, apply the prompt with the row's data and generate the email
-4. Output as JSON per row, accumulate results
-5. Save to output CSV
+### Step 1: Dry run
 
-### Option B: Batch generation (30+ contacts)
+Before spending API credits, show the user a dry run:
+1. Read the prompt template and contact CSV
+2. For 2-3 sample contacts, display exactly what data will be passed (all enrichment fields, hypothesis match, structural variant selection)
+3. Ask the user to confirm the data looks correct before proceeding
+4. If enrichment fields are missing or misaligned, flag it and stop
 
-Process in batches of 10-20 rows within the conversation:
+### Step 2: Generate via script
 
-1. Load the prompt template and contact CSV
-2. Process contacts in batches
-3. For each row, apply the prompt and generate the email JSON
-4. Accumulate results and save to output CSV
+Write a generation script that reads the prompt template + contact CSV, calls the API per row, and writes output files. See [references/generation-script.md](references/generation-script.md) for the script template and implementation details.
 
-**Output path:** `claude-code-gtm/csv/output/{campaign-slug}/emails.csv`
+Adapt the script to the user's API setup (Anthropic, OpenAI, etc.) and the specific prompt format.
+
+### Step 3: Output both CSV and MD
+
+Always generate two output files:
+- `claude-code-gtm/csv/output/{campaign-slug}/emails.csv` — for upload to sequencer
+- `claude-code-gtm/csv/output/{campaign-slug}/emails.md` — for human review (one email per section, with contact name and company as headers)
 
 ## Quality Checks
 
@@ -102,17 +105,16 @@ When the contact CSV includes segmentation data (from `list-segmentation`):
 - Do not generate emails
 - Route back to `list-enrichment` or `list-building`
 
-## In-Chat Refinement Loop
+## Feedback Loop
 
-After generating, the user can refine:
+When the user gives feedback on generated emails, the workflow is always:
 
-1. User identifies emails they don't like
-2. User says what to change
-3. **Update the prompt template** (not just the individual email) — the fix should be systemic
-4. Re-run the generator with updated prompt
-5. Repeat until satisfied
+1. User identifies what's wrong (tone, structure, missing data, wrong angle)
+2. **Update the prompt template** — the fix must be systemic, never a one-off edit
+3. **Rerun the script** with the updated prompt
+4. Review the new output
 
-Track changes made to the prompt so the user can see the evolution.
+Never hand-edit individual emails. If one email is bad, the prompt is bad — fix the source. Track changes made to the prompt so the user can see the evolution.
 
 ## Building a New Prompt Template
 
