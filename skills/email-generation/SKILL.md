@@ -68,35 +68,9 @@ Before spending API credits, show the user a dry run:
 
 ### Step 2: Generate via script
 
-Use the generation script template below. The script reads the prompt + CSV, calls the API per row, and writes output files.
+Write a generation script that reads the prompt template + contact CSV, calls the API per row, and writes output files. See [references/generation-script.md](references/generation-script.md) for the script template and implementation details.
 
-```python
-#!/usr/bin/env python3
-"""
-Email generation script.
-Reads a prompt template + contact CSV, calls the API per row,
-writes emails to CSV and MD.
-
-Usage:
-  python3 generate_emails.py \
-    --prompt prompts/{vertical}/en_first_email.md \
-    --contacts csv/input/{campaign}/contacts.csv \
-    --output csv/output/{campaign}/emails \
-    [--enrichment csv/input/{campaign}/enrichment.csv]
-"""
-import csv, json, os, sys, argparse
-from pathlib import Path
-
-# Add argument parsing, API client setup, and per-row generation logic here.
-# The script should:
-# 1. Read the prompt template as the system/user prompt
-# 2. For each CSV row, format the row data as JSON and append to the prompt
-# 3. Call the API and parse the JSON response
-# 4. Write each result to both CSV and MD output files
-# 5. Print progress (row N/total, company name, subject line)
-```
-
-Adapt this template to the user's API setup (Anthropic, OpenAI, etc.) and the specific prompt format.
+Adapt the script to the user's API setup (Anthropic, OpenAI, etc.) and the specific prompt format.
 
 ### Step 3: Output both CSV and MD
 
