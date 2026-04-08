@@ -70,6 +70,10 @@ claude-code-gtm/context/{vertical-slug}/sourcing_research.md
 claude-code-gtm/context/{vertical-slug}/hypothesis_set.md
 ```
 
+**Also read the contact CSV headers.** Before writing any prompt rules, check which enrichment fields actually exist in the CSV. Only reference fields that are present. If the prompt needs a field that isn't there, either ask the user to add it via enrichment or drop that rule.
+
+**Check persona spread.** If the contact list spans multiple personas (e.g., executives + ICs + ops), recommend splitting into separate prompts per role cluster. One prompt trying to handle all roles produces generic output. Flag this to the user before proceeding.
+
 ### Step 2: Synthesize (the reasoning step)
 
 This is where the skill does real work. For each section of the prompt:
@@ -99,6 +103,13 @@ This is where the skill does real work. For each section of the prompt:
 - Reason about which value angle matters for THIS audience and THIS hypothesis.
 - Write 2-3 hypothesis-matched value angles with the reasoning embedded.
 - Use the email-safe value prop, not the raw version (avoid banned words).
+- **P2 simplicity check — enforce before saving:**
+  - One idea per sentence. No compound lists.
+  - No architecture descriptions. No implementation jargon (see Anti-patterns #3).
+  - If a sentence has more than two commas, split it into separate sentences.
+  - Read P2 aloud. If any sentence requires a second read, rewrite it shorter.
+  - Bad: "We aggregate 100M+ records from trade registries, customs filings, and corporate databases, enabling teams to run queries like 'packaging suppliers in DACH under €50M' and get matched results in seconds."
+  - Good: "We track 100M+ companies across trade registries and customs filings. Your team can search something like 'packaging suppliers in DACH under €50M' and get results in seconds."
 - Example query rules:
   - The example query MUST reference a vertical or category the prospect's platform actually serves. Use enrichment data or company description.
   - NEVER reuse the same example query across different prospects.
@@ -164,12 +175,33 @@ P2 — [Synthesized value angles per hypothesis. Key numbers from context. Verti
 P3 — [CTA rules with campaign-specific examples]
 P4 — [Proof points with conditions. Drop entirely if no proof meets all three criteria.]
 
+## Subject line rules
+[Subject references the prospect's problem, not your product. Never sound like
+you're selling data or leads. No "boost your pipeline" or "better lead lists."
+Frame around THEIR challenge: coverage gap, manual process, missed deals.]
+
 ## Output format
 [JSON keys]
 
 ## Banned phrasing
 [From context → Voice + campaign additions]
+
+## Example emails
+[Include 2-3 full example emails as demonstrations. Models follow examples
+better than instructions. Each example should show a different structural
+variant or hypothesis. Annotate each with which variant, hypothesis, and
+enrichment fields it uses.]
 ```
+
+### Anti-patterns — what NOT to do
+
+Every generated prompt must include these rules verbatim. These are the most common ways cold emails fail:
+
+1. **Never repeat the prospect's own info back to them.** Don't paraphrase their LinkedIn headline, restate their company description, or echo what their product does. They already know. It signals you scraped them and have nothing to say.
+2. **Never explain their business to them.** Don't tell a CTO how three-tier architectures work. Don't tell a data vendor that data decays. If they live it daily, skip it.
+3. **Never use architecture jargon in P2.** No "three-tier," "waterfall," "entity resolution," "microservices," "data mesh," or implementation-level terms. P2 is about outcomes, not internals. If a term wouldn't appear in a board deck, cut it.
+4. **Never stack multiple questions.** One email, one question — max. Two questions compete for attention and neither gets answered. If you have a question in P1, P3's CTA must be a statement or offer, not another question.
+5. **P2 must be readable on first pass.** If you have to read a sentence twice to understand it, rewrite it. No nested clauses, no stacked qualifiers, no "which enables X that drives Y resulting in Z" chains.
 
 ### Step 4: Self-containment check
 
@@ -183,6 +215,10 @@ Before saving, verify:
 - [ ] Research data is embedded with actual numbers, not "use the research data"
 - [ ] No references to external files — the email-generation skill only needs this prompt + CSV
 - [ ] Banned words from context file are included in the banned phrasing section
+- [ ] Every enrichment field referenced in the prompt actually exists in the CSV headers
+- [ ] Subject line rules reference the prospect's problem, not your product
+- [ ] At least 2 full example emails are included as demonstrations
+- [ ] If contact list spans multiple personas, separate prompts were recommended
 
 ### Step 5: Save
 

@@ -56,24 +56,53 @@ Review the removed rows before proceeding. Do not generate emails for rows with 
 
 ## Running the Generator
 
-### Option A: In-chat generation (< 30 contacts)
+**Script-first, not in-context.** Always generate via a script that calls the API per contact. Never generate emails inside the conversation — it's slow, expensive, and impossible to rerun after prompt edits.
 
-1. Read the prompt template
-2. Read the contact CSV
-3. For each row, apply the prompt with the row's data and generate the email
-4. Output as JSON per row, accumulate results
-5. Save to output CSV
+### Step 1: Dry run
 
-### Option B: Batch generation (30+ contacts)
+Before spending API credits, show the user a dry run:
+1. Read the prompt template and contact CSV
+2. For 2-3 sample contacts, display exactly what data will be passed (all enrichment fields, hypothesis match, structural variant selection)
+3. Ask the user to confirm the data looks correct before proceeding
+4. If enrichment fields are missing or misaligned, flag it and stop
 
-Process in batches of 10-20 rows within the conversation:
+### Step 2: Generate via script
 
-1. Load the prompt template and contact CSV
-2. Process contacts in batches
-3. For each row, apply the prompt and generate the email JSON
-4. Accumulate results and save to output CSV
+Use the generation script template below. The script reads the prompt + CSV, calls the API per row, and writes output files.
 
-**Output path:** `claude-code-gtm/csv/output/{campaign-slug}/emails.csv`
+```python
+#!/usr/bin/env python3
+"""
+Email generation script.
+Reads a prompt template + contact CSV, calls the API per row,
+writes emails to CSV and MD.
+
+Usage:
+  python3 generate_emails.py \
+    --prompt prompts/{vertical}/en_first_email.md \
+    --contacts csv/input/{campaign}/contacts.csv \
+    --output csv/output/{campaign}/emails \
+    [--enrichment csv/input/{campaign}/enrichment.csv]
+"""
+import csv, json, os, sys, argparse
+from pathlib import Path
+
+# Add argument parsing, API client setup, and per-row generation logic here.
+# The script should:
+# 1. Read the prompt template as the system/user prompt
+# 2. For each CSV row, format the row data as JSON and append to the prompt
+# 3. Call the API and parse the JSON response
+# 4. Write each result to both CSV and MD output files
+# 5. Print progress (row N/total, company name, subject line)
+```
+
+Adapt this template to the user's API setup (Anthropic, OpenAI, etc.) and the specific prompt format.
+
+### Step 3: Output both CSV and MD
+
+Always generate two output files:
+- `claude-code-gtm/csv/output/{campaign-slug}/emails.csv` — for upload to sequencer
+- `claude-code-gtm/csv/output/{campaign-slug}/emails.md` — for human review (one email per section, with contact name and company as headers)
 
 ## Quality Checks
 
@@ -102,17 +131,16 @@ When the contact CSV includes segmentation data (from `list-segmentation`):
 - Do not generate emails
 - Route back to `list-enrichment` or `list-building`
 
-## In-Chat Refinement Loop
+## Feedback Loop
 
-After generating, the user can refine:
+When the user gives feedback on generated emails, the workflow is always:
 
-1. User identifies emails they don't like
-2. User says what to change
-3. **Update the prompt template** (not just the individual email) — the fix should be systemic
-4. Re-run the generator with updated prompt
-5. Repeat until satisfied
+1. User identifies what's wrong (tone, structure, missing data, wrong angle)
+2. **Update the prompt template** — the fix must be systemic, never a one-off edit
+3. **Rerun the script** with the updated prompt
+4. Review the new output
 
-Track changes made to the prompt so the user can see the evolution.
+Never hand-edit individual emails. If one email is bad, the prompt is bad — fix the source. Track changes made to the prompt so the user can see the evolution.
 
 ## Building a New Prompt Template
 
