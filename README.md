@@ -29,7 +29,7 @@ Skills are stored in `~/.claude/skills/`. Install once, use everywhere across al
 
 ### 2. Get your Extruct API token
 
-Sign up at [extruct.ai](https://www.extruct.ai) (free trial with 100 credits) and grab your API token from the dashboard.
+Sign up at [extruct.ai](https://www.extruct.ai) (free plan with 25 monthly credits) and grab your API token from the dashboard.
 
 The token is needed for company search, table creation, enrichment, and people search. Skills that don't call the Extruct API (context-building, hypothesis-building, email-prompt-building, email-generation) work without it.
 
@@ -109,7 +109,7 @@ Use one, combine a few, or run them all. No required sequence, each skill works 
 - **AI Tables**: research any data point per company with AI agents (1 credit/cell)
 - **People Finder**: find decision makers with LinkedIn profiles (2 credits/cell)
 
-**Pricing:** from $59/mo for 1K credits. Free trial with 100 credits. See [extruct.ai/pricing](https://www.extruct.ai/pricing).
+**Pricing:** Free with 25 monthly credits. Starter at $49/mo for 500 credits. See [extruct.ai/pricing](https://www.extruct.ai/pricing).
 
 Built by [Danny Chepenko](https://www.linkedin.com/in/danielchepenko/) and [Dima Persiyanov](https://www.linkedin.com/in/persiyanov/)
 
