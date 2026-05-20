@@ -1,121 +1,133 @@
 ---
 name: email-generation
 description: >
-  Generate cold outreach emails from a contact CSV and a self-contained prompt
-  template. Campaign-agnostic — no hardcoded product or voice. The prompt
-  template (from email-prompt-building skill) contains all voice rules, research data,
-  value prop, proof points, and personalization rules. This skill just runs it.
-  Triggers on: "generate emails", "email generation", "run emails", "create
-  emails", "email pipeline", "generate outreach", "write emails for campaign".
+  Render a cold-outreach email sequence from a fixed template set and a
+  contact CSV whose input fields are already filled. Deterministic — variant
+  routing + placeholder substitution, no per-row LLM call. The render contract
+  (newline model, per-target escaping, operation order) is the core of this
+  skill. Triggers on: "generate emails", "email generation", "run emails",
+  "render emails", "create emails", "email pipeline", "generate outreach".
 ---
 
-# Email Generation
+# Email Generation (Renderer)
 
-Generate cold outreach emails from a contact CSV + prompt template. The prompt template is self-contained — it has all voice, research, value prop, proof points, and personalization rules baked in. This skill just runs it per row.
+Render a sequence from a **fixed template set** (`sequence.md` from `email-prompt-building`) and a contact CSV whose `{{input_fields}}` are already populated. This skill is **mechanical**: route variants, substitute placeholders, render to the target format, write the output CSV.
+
+There is **no LLM call here.** All strategic reasoning happened at design time (`email-prompt-building`); all per-row intelligence happened upstream in normalization + enrichment, which filled the input fields. If an email is wrong, the template or the input data is wrong — fix the source, re-render.
 
 ## Architectural Principle
 
-**This skill is a runner, not a reasoner.** All strategic reasoning (voice, value angles, proof points, research data) was done by the `email-prompt-building` skill at prompt-build time and embedded in the prompt template. This skill reads the prompt + CSV and generates emails. It does NOT read the context file, hypothesis set, or research files.
+**This skill is a renderer, not a reasoner and not a runner.**
 
 ```
-prompt template (.md) ─┐
-                       ├──▶ generate email per row ──▶ emails CSV
-contact CSV ───────────┘
+template set (sequence.md) ─┐
+                            ├──▶ route variant ─▶ substitute ─▶ render to target ──▶ emails CSV
+contact CSV (fields filled) ┘
 ```
 
 ## Inputs Required
 
 | Input | Source | Required |
 |-------|--------|----------|
-| Contact CSV | File with recipient data + enrichment columns | yes |
-| Prompt template | `.md` file from `email-prompt-building` skill | yes |
+| Template set | The campaign's sequence file from `email-prompt-building` | yes |
+| Contact CSV | Input fields already filled by normalization + enrichment | yes |
 
-That's it. No context file, no hypothesis set, no research files.
+The contact CSV must carry **every field in the template's Input Fields contract**, plus the routing key(s). If a declared field is missing for a row, apply that field's declared fallback; if the row can't be salvaged, drop it and report.
 
-### Contact CSV Columns
+## The Render Contract
 
-The prompt template specifies which columns it needs. Check the prompt's "Enrichment data fields" section for the expected column names. Common columns:
+Rendering is where this pipeline actually breaks. "Substitute the placeholders" hand-waves the hard part — newlines and escaping. This contract is mandatory.
 
-**Required (always):**
-- `first_name`, `last_name`, `company_name`, `job_title`
+### Newline model
 
-**Enrichment (campaign-specific):**
-Listed in the prompt template. If the prompt references a field that's not in the CSV, the email quality degrades. Check column alignment before running.
+The template uses two break types and the renderer MUST preserve the distinction:
+- **`\n\n` (blank line)** = paragraph break
+- **`\n` (single)** = soft line break inside a paragraph (used deliberately)
 
-## Name Sanitization
+### Render targets — one body, three outputs
 
-Before generating emails, run `scripts/sanitize-names.py` on the contact CSV:
+| Target | Newline handling | Escaping |
+|--------|------------------|----------|
+| `review` (`emails.md` / CSV `body` column) | keep `\n\n` and `\n` literal | none — but the CSV writer MUST quote the multiline cell |
+| `html` (Instantly / sequencer) | `\n` → `<br />` (so `\n\n` → `<br /><br />`) | HTML-escape `& < >` in the content |
+| `plain` (plain-text channels) | keep literal | none |
 
-```bash
-python3 scripts/sanitize-names.py <contact.csv> [output.csv]
+### Order of operations — non-negotiable
+
+1. **Route variant** — pick the touch variant using the routing key (e.g. `customer_segment`).
+2. **Substitute `{{fields}}`** into the plain-text body.
+3. **Escape + newline-convert LAST**, on the fully-assembled string.
+
+Why this order: if you HTML-escape the template *before* substitution, a field value like `Johnson & Johnson` slips in unescaped and breaks the HTML. Escaping the final assembled string covers both template copy and substituted values.
+
+### Reference renderer
+
+```python
+import html
+
+def render(body: str, target: str) -> str:
+    """body: assembled plain-text (variant chosen, {{fields}} substituted).
+    target: 'review' | 'html' | 'plain'."""
+    if target in ("review", "plain"):
+        return body
+    if target == "html":
+        # escape content per line, THEN join with <br /> — never escape the tags
+        return "<br />".join(html.escape(line) for line in body.split("\n"))
+    raise ValueError(target)
 ```
 
-The script strips titles (`Dr`, `Prof`, etc.), removes rows with single-character names, emoji, junk values (`N/A`, `Test`, `-`), and fixes all-caps casing. It outputs a `*_sanitized.csv` and prints what was cleaned/removed.
+### Failure modes the renderer must guard against
 
-Review the removed rows before proceeding. Do not generate emails for rows with invalid names.
+- **#1 bug — forgetting `\n` → `<br>`**: the email arrives as one wall of text. Every HTML sequencer needs the conversion.
+- **Escaping before substitution** — field values with `& < >` break the HTML.
+- **Double-escaping** — `&amp;amp;`. Escape exactly once, as the last step.
+- **Unquoted multiline CSV cell** — embedded newlines in the `body` column shift rows/columns. Use a real CSV writer.
+- **Unsubstituted placeholders** — the renderer MUST assert zero `{{` remain in any output before writing. A leftover `{{company_name}}` means the field wasn't passed (e.g. Touch 3 not receiving `company_name`).
 
-## Running the Generator
+## Workflow
 
-**Script-first, not in-context.** Always generate via a script that calls the API per contact. Never generate emails inside the conversation — it's slow, expensive, and impossible to rerun after prompt edits.
+### Step 1: Validate inputs
 
-### Step 1: Dry run
+- Read the template set; collect every `{{field}}` and every routing key.
+- Read the contact CSV headers; confirm every declared input field + routing key is present.
+- Report any mismatch and stop before rendering.
 
-Before spending API credits, show the user a dry run:
-1. Read the prompt template and contact CSV
-2. For 2-3 sample contacts, display exactly what data will be passed (all enrichment fields, hypothesis match, structural variant selection)
-3. Ask the user to confirm the data looks correct before proceeding
-4. If enrichment fields are missing or misaligned, flag it and stop
+### Step 2: Render per row
 
-### Step 2: Generate via script
+For each contact, for each touch:
+1. Route the variant (if the touch has variants).
+2. Substitute input fields into the plain-text body; apply per-field fallback when a value is empty.
+3. Render to each required target (`review`, `html`).
+4. Assert no `{{` remains.
 
-Write a generation script that reads the prompt template + contact CSV, calls the API per row, and writes output files. See [references/generation-script.md](references/generation-script.md) for the script template and implementation details.
+Subject lines: first touch only; follow-ups carry an empty subject (thread continuation).
 
-Adapt the script to the user's API setup (Anthropic, OpenAI, etc.) and the specific prompt format.
+### Step 3: Write outputs
 
-### Step 3: Output both CSV and MD
+- An emails CSV — one row per (contact × touch): `email, first_name, company_name, touch, variant, subject, body, body_html, gaps`. The `gaps` column records which fields fell back (e.g. `industry=fallback`).
+- A human-readable review file — one email per section.
 
-Always generate two output files:
-- `claude-code-gtm/csv/output/{campaign-slug}/emails.csv` — for upload to sequencer
-- `claude-code-gtm/csv/output/{campaign-slug}/emails.md` — for human review (one email per section, with contact name and company as headers)
+Write both into the GTM project's campaign-assets location. See [references/render_emails.py](references/render_emails.py) for the reference renderer.
 
-## Quality Checks
+### Step 4: Quality checks
 
-After generating, verify:
-- [ ] Every email is within the word limit specified in the prompt
-- [ ] No banned phrases from the prompt template appear
-- [ ] Enrichment data was actually used — not just generic text
-- [ ] Example queries in P2 are specific to each recipient's verticals
-- [ ] Proof points vary across emails (not the same PS for everyone)
-- [ ] Subject lines meet the prompt's length constraints
-
-## Segmentation-Aware Generation
-
-When the contact CSV includes segmentation data (from `list-segmentation`):
-
-**Tier 1 companies:**
-- Generate individually with full attention to enrichment data
-- Route through `email-response-simulation` for review before sending
-
-**Tier 2 companies:**
-- Group by `hypothesis_number`
-- Generate in batches within each hypothesis group
-- Spot-check 2-3 from each group
-
-**Tier 3 companies:**
-- Do not generate emails
-- Route back to `list-enrichment` or `list-building`
+- [ ] Zero unsubstituted `{{` across all rows
+- [ ] Variant routing correct — spot-check one row per variant
+- [ ] `\n\n` and `\n` both survive into the HTML target as `<br /><br />` / `<br />`
+- [ ] A field value containing `&` / `<` renders escaped (not raw, not double-escaped)
+- [ ] Row count = contacts × touches; `gaps` populated where fallbacks fired
+- [ ] Follow-up touches have empty subject
 
 ## Feedback Loop
 
-When the user gives feedback on generated emails, the workflow is always:
+When the user flags a bad email:
+1. Identify whether it's a **copy** problem (→ fix the template via `email-prompt-building`) or a **data** problem (→ fix normalization/enrichment so the input field is correct).
+2. Re-render. Never hand-edit an individual email — the fix is always in the template or the input data.
 
-1. User identifies what's wrong (tone, structure, missing data, wrong angle)
-2. **Update the prompt template** — the fix must be systemic, never a one-off edit
-3. **Rerun the script** with the updated prompt
-4. Review the new output
+## Suppression
 
-Never hand-edit individual emails. If one email is bad, the prompt is bad — fix the source. Track changes made to the prompt so the user can see the evolution.
+Before writing the output CSV, drop any contact whose email is on the GTM project's suppression list (unsubscribes, bounces, retired addresses). The project owns where that list lives; this skill only honors it.
 
-## Building a New Prompt Template
+## No template yet?
 
-If no prompt template exists for this campaign, use the `email-prompt-building` skill to build one. That skill reads the context file and research, then synthesizes a self-contained prompt. Do not build prompts ad hoc in this skill.
+If no `sequence.md` exists for the campaign, use the `email-prompt-building` skill to design one. Do not improvise copy in this skill — this skill only renders.
