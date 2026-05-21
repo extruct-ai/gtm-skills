@@ -1,265 +1,177 @@
 ---
 name: email-prompt-building
 description: >
-  Generate self-contained email prompt templates for cold outreach campaigns.
-  Reads from the company context file (voice, value prop, proof points) and
-  campaign research (hypotheses, data points) to produce a prompt that the
-  email-generation skill runs per-row against a contact CSV. One prompt per
-  campaign. Triggers on: "cold email", "outreach prompt", "email campaign",
-  "new vertical email", "draft email prompt", "email sequence".
+  Design a cold-outreach email sequence as a FIXED TEMPLATE SET — real,
+  human-approved copy with {{input_field}} placeholders and variant-routing
+  rules. Reads the company context file and campaign research, explores
+  angles, and commits to copy at design time. The output is rendered later by
+  the email-generation skill via deterministic substitution — no per-row LLM.
+  Triggers on: "cold email", "outreach prompt", "email campaign", "new
+  vertical email", "draft email prompt", "email sequence", "email template".
 ---
 
-# Cold Email Prompt Builder
+# Cold Email Template Builder
 
-Generate self-contained prompt templates for cold outreach campaigns. Each prompt encodes everything the email generator needs: voice, research data, value prop, proof points, and personalization rules. No external file references at runtime.
+Design a cold-outreach sequence and commit it to a **fixed template set**: the actual approved copy for every touch, with `{{input_field}}` placeholders and variant-routing rules. This skill does the thinking — explore angles, form pain hypotheses, decide the sequence arc, pick proof points — and bakes the result into final copy.
+
+The template is rendered later by `email-generation` via plain deterministic substitution. There is **no runtime LLM** writing emails per row.
 
 ## Architectural Principle
 
-**This skill is a generator, not a template.** It reads the company context file and campaign research, reasons about what fits this specific audience, and produces a self-contained prompt. Each campaign gets its own prompt. Each company gets its own context file. Nothing is hardcoded in this skill.
+**This skill is design-time. It commits to copy; it does not defer decisions to a runtime model.**
+
+Older versions of this skill emitted an *LLM instruction prompt* and let a per-row model write each email. That is retired. Per-row variance is now expressed two ways only: (1) `{{input_fields}}` filled upstream, (2) discrete variant templates selected by a routing key. Everything else is identical across the batch.
 
 ```
-                          BUILD TIME (this skill)
-                          ┌─────────────────────────────────────┐
-context file ────────────▶│                                     │
-research / hypothesis ───▶│  Synthesize into self-contained     │──▶ prompt template (.md)
-enrichment column list ──▶│  prompt with reasoning baked in     │
-                          └─────────────────────────────────────┘
+                       DESIGN TIME (this skill)
+                       ┌─────────────────────────────────────┐
+context file ─────────▶│  explore angles, pick hypotheses,    │
+research / hypotheses ▶│  decide sequence arc, choose proof   │──▶ template set (sequence.md)
+enrichment field list ▶│  → commit to FINAL COPY              │     • real copy per touch
+                       └─────────────────────────────────────┘     • {{input_field}} placeholders
+                                                                    • variant-routing rules
+                                                                    • Input Fields contract
 
-                          RUN TIME (email-generation skill)
-                          ┌─────────────────────────────────────┐
-prompt template (.md) ───▶│                                     │
-contact CSV ─────────────▶│  Generate emails per row            │──▶ emails CSV
-                          └─────────────────────────────────────┘
+                       FILL TIME (normalization + enrichment skills)
+                         contacts ─▶ populate every declared input field
+
+                       RENDER TIME (email-generation skill)
+                         template + filled CSV ─▶ deterministic render ─▶ emails CSV
 ```
 
 ## What This Skill Reads (inputs)
 
-| Input | Source | What to extract |
-|-------|--------|-----------------|
-| Context file | `claude-code-gtm/context/{company}_context.md` | Voice, sender, value prop, proof library, key numbers, banned words |
-| Research | `claude-code-gtm/context/{vertical-slug}/sourcing_research.md` | Verified data points, statistics, tool comparisons |
-| Hypothesis set | `claude-code-gtm/context/{vertical-slug}/hypothesis_set.md` | Numbered hypotheses with mechanisms and evidence |
-| Enrichment columns | CSV headers from list-enrichment output | Field names and what they contain |
-| Campaign brief | User describes audience, roles, goals | Target vertical, role types, campaign angle |
+All inputs live in the GTM project this skill is invoked on (paths are
+project-relative; the exact layout is the project's, not this skill's).
+
+| Input | What to extract |
+|-------|-----------------|
+| Company context file | Voice, sender, value prop, proof library, key numbers, banned words |
+| Campaign research | Verified data points, statistics, tool comparisons |
+| Hypothesis set | Numbered hypotheses with mechanisms and evidence |
+| Enrichment field list | Which `{{input_fields}}` will be available, and from which enrichment/normalization step |
+| Campaign brief | Target vertical, role types, sequence length |
 
 ## What This Skill Produces (output)
 
-A single `.md` file at `claude-code-gtm/prompts/{vertical-slug}/en_first_email.md` containing:
+A **template set** — one sequence file per campaign — containing:
 
-1. **Role line** — who the LLM acts as (from context file → Voice → Sender)
-2. **Core pain** — why this audience has this problem (from research, not generic)
-3. **Voice rules** — tone, constraints, banned words (from context file → Voice)
-4. **Research context** — verified data points embedded directly (from sourcing_research.md)
-5. **Enrichment data fields** — table mapping each CSV column to how to use it
-6. **Hypothesis-based P1 rules** — rich descriptions with research data, mechanisms, evidence
-7. **P2 value angle** — synthesized from context file → What We Do, adapted per hypothesis
-8. **P3 CTA rules** — campaign-specific examples
-9. **P4 proof points** — selected from context file → Proof Library, with conditions for when to use each
-10. **Output format** — JSON keys, word limits
-11. **Banned phrasing** — from context file → Voice → Banned words + campaign-specific additions
+1. **Sequence overview** — touches, send cadence, the variable list
+2. **Per-touch copy** — the FINAL approved text of each email, verbatim, with `{{input_field}}` placeholders inline. Not rules for writing it — the actual words.
+3. **Variant-routing rules** — when a touch has variants, the routing key and the condition for each (e.g. `Touch 3: segment == "enterprise" → variant A, else → variant B`)
+4. **Input Fields contract** (see below) — every `{{field}}`, its source, and its fallback
+5. **Subject lines** — first touch only; follow-ups use empty subject to thread
+6. **Notes** — why each angle was chosen, voice rules applied, what was deliberately excluded
 
-## Building a Campaign Prompt
+See [references/example-sequence.md](references/example-sequence.md) for the worked output shape.
+
+### The Input Fields contract
+
+Every `{{placeholder}}` in the template MUST be declared in a table — this is the handshake with the fill + render steps. A render fails loudly if a declared field is missing; an *undeclared* placeholder is a bug. Describe each source by its **role** (a normalization step, a classification enrichment column), not by a file path in any specific project.
+
+| Field | Source (by role) | Fallback if missing |
+|-------|------------------|---------------------|
+| `{{first_name}}` | name-normalization step | skip the contact |
+| `{{company_name}}` | name-normalization step | skip the contact |
+| `{{industry}}` | industry-classification enrichment column | drop the clause that uses it (provide a no-`{{industry}}` variant) |
+| `{{segment}}` (routing key) | segment-classification enrichment column | route to the default variant |
+
+If a field needs genuine per-row writing (e.g. a bespoke one-line opener), it is still an input field — produced by an **LLM enrichment column** upstream, not by this skill and not at render time.
+
+## Building a Campaign Template Set
 
 ### Step 1: Read upstream data
 
-Read these files before writing anything:
+Read the project's company context file, campaign research, and hypothesis set.
 
-```
-claude-code-gtm/context/{company}_context.md
-claude-code-gtm/context/{vertical-slug}/sourcing_research.md
-claude-code-gtm/context/{vertical-slug}/hypothesis_set.md
-```
+Also confirm the **enrichment field list** — which `{{input_fields}}` will actually be available, and from which enrichment/normalization step. Only use fields you can guarantee will be filled.
 
-**Also read the contact CSV headers.** Before writing any prompt rules, check which enrichment fields actually exist in the CSV. Only reference fields that are present. If the prompt needs a field that isn't there, either ask the user to add it via enrichment or drop that rule.
+**Check persona spread.** If the contact list spans multiple personas (executives + ICs + ops), build a separate template set per role cluster. One template trying to serve all roles produces mush.
 
-**Check persona spread.** If the contact list spans multiple personas (e.g., executives + ICs + ops), recommend splitting into separate prompts per role cluster. One prompt trying to handle all roles produces generic output. Flag this to the user before proceeding.
+### Step 2: Explore angles, then commit to copy
 
-### Step 2: Synthesize (the reasoning step)
+This is the real work. There is no runtime model to "figure it out per row" — this skill must commit.
 
-This is where the skill does real work. For each section of the prompt:
+- For each hypothesis, work out the sharpest way to land the pain. Explore several angles.
+- **Map angles onto the sequence**: each strong angle becomes a *touch* (Touch 1 = angle A, Touch 2 = angle B, …) or a *variant* of a touch. Multi-touch sequences let you take the problem from several angles without cramming.
+- Write the FINAL copy for each touch. Actual sentences, not "write a P1 about X."
+- Apply voice rules from the context file (tone, constraints, banned words). Do not invent voice.
+- Place `{{input_field}}` placeholders only where per-row substitution is genuinely needed. Everything else is fixed copy.
 
-**Voice → from context file:**
-- Read `## Voice` section. Copy sender name, tone, constraints, banned words into the prompt.
-- Do NOT invent voice rules. If the context file doesn't have them, ask the user.
+### Step 3: Define variants and routing
 
-**P1 → from research + hypotheses:**
-- For each hypothesis in the campaign, write a rich description using data points from the research.
-- Explain the MECHANISM (why this pain exists), not just the symptom.
-- Include specific numbers from the research (coverage percentages, decay rates, time costs).
-- Write P1 rules that reference enrichment fields by name.
-- NEVER use generic framing like "scores suppliers" or "manages vendors." Use the `platform_type` enrichment field or derive the actual description from the company profile. If the enrichment data doesn't include `platform_type`, instruct the generator to describe what the company actually does based on its description.
+When a touch should differ by segment/persona, write each variant as **separate, complete copy** — never one template with "if enterprise, say X" conditionals. Declare the routing key and the condition per variant. Keep variants few (2-3); each is a full email.
 
-**Competitive awareness rules (embed in P1/P2):**
-- If enrichment data or research reveals the prospect company has an existing capability that overlaps with your product:
-  1. NEVER pitch as a replacement. Position as a data layer underneath.
-  2. Acknowledge their existing tool by name in P1.
-  3. Shift P2 from "here's what we do" to "here's what we add to what you already do."
-  4. If the prospect FOUNDED a competing product (career history), either:
-     a. Use Variant D (peer founder) and reference shared context, OR
-     b. Deprioritize. Flag to user as "risky send, needs manual review."
+### Step 4: Write the Input Fields contract
 
-**P2 → from context file → What We Do:**
-- Read the product description, email-safe value prop, and key numbers.
-- Reason about which value angle matters for THIS audience and THIS hypothesis.
-- Write 2-3 hypothesis-matched value angles with the reasoning embedded.
-- Use the email-safe value prop, not the raw version (avoid banned words).
-- **P2 simplicity check — enforce before saving:**
-  - One idea per sentence. No compound lists.
-  - No architecture descriptions. No implementation jargon (see Anti-patterns #3).
-  - If a sentence has more than two commas, split it into separate sentences.
-  - Read P2 aloud. If any sentence requires a second read, rewrite it shorter.
-  - Bad: "We aggregate 100M+ records from trade registries, customs filings, and corporate databases, enabling teams to run queries like 'packaging suppliers in DACH under €50M' and get matched results in seconds."
-  - Good: "We track 100M+ companies across trade registries and customs filings. Your team can search something like 'packaging suppliers in DACH under €50M' and get results in seconds."
-- Example query rules:
-  - The example query MUST reference a vertical or category the prospect's platform actually serves. Use enrichment data or company description.
-  - NEVER reuse the same example query across different prospects.
-  - Format: "{category} in {geography} under {size constraint}"
+Declare every `{{field}}` per the table above — source and fallback. A field with no reliable source is not allowed in the template; either add an enrichment step that produces it, or cut the clause.
 
-**P4 → from context file → Proof Library:**
-
-Select proof points based on THREE dimensions:
-
-| Dimension | Logic |
-|-----------|-------|
-| **Peer relevance** | Proof company should be same size or larger than prospect. Never cite a smaller company as proof to a bigger one. |
-| **Hypothesis alignment** | Proof point should validate the same hypothesis used in P1. |
-| **Non-redundancy** | If a stat appears in P2, do NOT repeat it in P4. |
-
-If no proof point meets all three criteria, drop P4 entirely (use a shorter structural variant instead).
-
-**Banned phrasing → from context file + campaign-specific:**
-- Start with banned words from context file → Voice.
-- Add any campaign-specific banned phrases discovered during generation or email-response-simulation.
-
-### Step 3: Assemble the prompt
-
-Write the `.md` file following this skeleton:
+### Step 5: Assemble the sequence file
 
 ```markdown
-[Role line from context → Voice → Sender]
+# Sequence — {campaign}
 
-[Core pain — 2-3 sentences from research. Not generic.]
+[overview: touches, cadence, variables]
 
-## Hard constraints
-[From context → Voice. Copied verbatim.]
+## Touch 1 — {angle}
+[FINAL copy with {{placeholders}}]
+**Subject options:** [first touch only]
 
-## Research context
-[Verified data points from sourcing_research.md. Actual numbers, tool names,
-coverage gaps. This is the foundation for P1.]
+## Touch 2 — {angle}
+[FINAL copy]  **Subject:** empty (threads as Re:)
 
-## Enrichment data fields
-[Table: field name → what it tells you → how to use it in the email]
+## Touch 3 — conditional on {{routing_key}}
+### Variant A — {condition}
+[FINAL copy]
+### Variant B — {condition}
+[FINAL copy]
 
-## Hypothesis-based P1
-[Per hypothesis: mechanism, evidence, usage rules.
-All grounded in research data.]
+## Input Fields contract
+[the declared-fields table]
 
-## Role-based emphasis
-[Map role keywords → emphasis. Use specific data points.]
-
-## Structural variants
-[Select variant per recipient based on role + seniority from enrichment data.
-See "Structural Variants" section below for definitions.]
-
-## Competitive awareness
-[Rules for handling prospects with overlapping capabilities.]
-
-## Proof point selection
-[Three-dimensional selection: peer relevance, hypothesis alignment, non-redundancy.]
-
-## Example query rules
-[Must reference prospect's actual vertical. Never reuse across prospects.]
-
-P1 — [Rules referencing hypotheses and enrichment fields. Use actual platform description, not generic framing.]
-P2 — [Synthesized value angles per hypothesis. Key numbers from context. Vertical-specific example queries.]
-P3 — [CTA rules with campaign-specific examples]
-P4 — [Proof points with conditions. Drop entirely if no proof meets all three criteria.]
-
-## Subject line rules
-[Subject references the prospect's problem, not your product. Never sound like
-you're selling data or leads. No "boost your pipeline" or "better lead lists."
-Frame around THEIR challenge: coverage gap, manual process, missed deals.]
-
-## Output format
-[JSON keys]
-
-## Banned phrasing
-[From context → Voice + campaign additions]
-
-## Example emails
-[Include 2-3 full example emails as demonstrations. Models follow examples
-better than instructions. Each example should show a different structural
-variant or hypothesis. Annotate each with which variant, hypothesis, and
-enrichment fields it uses.]
+## Notes
+[angle rationale, voice rules, what was excluded]
 ```
 
-### Anti-patterns — what NOT to do
+### Step 6: Quality check
 
-Every generated prompt must include these rules verbatim. These are the most common ways cold emails fail:
+- [ ] Every touch is final copy, not instructions
+- [ ] Every `{{placeholder}}` is declared in the Input Fields contract with a source + fallback
+- [ ] No undeclared placeholders; no `{{field}}` whose source can't be guaranteed
+- [ ] Variants are complete separate copy, not conditionals inside one template
+- [ ] Follow-up touches have empty subject (thread continuation)
+- [ ] Voice rules + banned words come from the context file
+- [ ] Formatting rules respected: no signature, `--` not `–`/`—`, English only
+- [ ] Framing rules respected: never "we help {{industry}} teams", never describe the prospect's company, never "We're {Company}"
+- [ ] Anti-patterns below are not present in any touch
 
-1. **Never repeat the prospect's own info back to them.** Don't paraphrase their LinkedIn headline, restate their company description, or echo what their product does. They already know. It signals you scraped them and have nothing to say.
-2. **Never explain their business to them.** Don't tell a CTO how three-tier architectures work. Don't tell a data vendor that data decays. If they live it daily, skip it.
-3. **Never use architecture jargon in P2.** No "three-tier," "waterfall," "entity resolution," "microservices," "data mesh," or implementation-level terms. P2 is about outcomes, not internals. If a term wouldn't appear in a board deck, cut it.
-4. **Never stack multiple questions.** One email, one question — max. Two questions compete for attention and neither gets answered. If you have a question in P1, P3's CTA must be a statement or offer, not another question.
-5. **P2 must be readable on first pass.** If you have to read a sentence twice to understand it, rewrite it. No nested clauses, no stacked qualifiers, no "which enables X that drives Y resulting in Z" chains.
+### Step 7: Save
 
-### Step 4: Self-containment check
+Save the template set as the campaign's sequence file, in whatever location
+the GTM project uses for campaign assets (one sequence file per campaign).
 
-Before saving, verify:
-- [ ] Voice rules come from context file, not hardcoded in this skill
-- [ ] Structural variants are defined with role-based selection logic
-- [ ] P1 uses actual platform description, not generic framing
-- [ ] P2 example queries reference the prospect's actual vertical, not a generic category
-- [ ] P4 proof points pass all three selection criteria (peer relevance, hypothesis alignment, non-redundancy)
-- [ ] Competitive awareness rules are included for prospects with overlapping capabilities
-- [ ] Research data is embedded with actual numbers, not "use the research data"
-- [ ] No references to external files — the email-generation skill only needs this prompt + CSV
-- [ ] Banned words from context file are included in the banned phrasing section
-- [ ] Every enrichment field referenced in the prompt actually exists in the CSV headers
-- [ ] Subject line rules reference the prospect's problem, not your product
-- [ ] At least 2 full example emails are included as demonstrations
-- [ ] If contact list spans multiple personas, separate prompts were recommended
+## Anti-patterns — what NOT to write into any touch
 
-### Step 5: Save
+1. **Never repeat the prospect's own info back to them.** Don't paraphrase their headline or restate what their product does. They know. It signals a scrape with nothing to say.
+2. **Never explain their business to them.** If they live it daily, skip it.
+3. **No architecture jargon.** No "three-tier", "entity resolution", "data mesh". Copy is about outcomes, not internals.
+4. **One question per email.** Two questions compete and neither gets answered.
+5. **Readable on first pass.** No nested clauses, no stacked qualifiers. If a sentence needs a second read, rewrite it shorter.
+6. **Openers must be legible at first glance.** No white-paper-title noun phrases ("the X gap").
+7. **Don't paraphrase user-pasted copy.** If the user hands you a hook, use it verbatim.
 
-```
-claude-code-gtm/prompts/{vertical-slug}/en_first_email.md
-claude-code-gtm/prompts/{vertical-slug}/en_follow_up_email.md  (if follow-up needed)
-```
+## Sequence shape (defaults)
 
-## Structural Variants
+Touches take the problem from different angles, escalating from soft to direct:
+- **Touch 1** — congrats / context hook + the core inherited pain + soft CTA
+- **Touch 2** — a sharper proof or benchmark angle + give-a-doc CTA
+- **Touch 3** — a segment-specific angle (route by `{{customer_segment}}`)
+- **Touch 4** — short "goodbye" / breakup note
 
-Select structure based on role + seniority from enrichment data. These are defaults. Override from context file or user input.
+Cadence default: 2 days after Touch 1, 3 days between later touches. Override per campaign.
 
-### Variant A: Technical Evaluator (CTO, VP Eng, Head of Data)
-4 paragraphs, ≤120 words.
-- P1: pain with concrete data point
-- P2: product specs (API-first, pricing model, integration)
-- P3: low-effort CTA (sample search, not a meeting)
-- P4: peer proof point (PS)
+## References
 
-### Variant B: Founder / CEO (small company, <50 people)
-3 paragraphs, ≤90 words. No PS.
-- P1: pain tied to their specific stage or market move
-- P2: value + proof in one paragraph (merge P2+P4)
-- P3: CTA
-
-### Variant C: Executive / Chairman / Board (delegates decisions)
-2-3 paragraphs, ≤70 words. Forwardable.
-- P1: one sharp observation about their platform
-- P2: one sentence value + CTA combined
-- Optional P3: proof point only if it's a name they'd recognize
-
-### Variant D: Peer Founder (built something adjacent or competing)
-2 paragraphs, ≤60 words. Peer-to-peer tone.
-- P1: acknowledge shared context, state the angle without explaining basics
-- P2: specific offer, no product pitch
-
-### Follow-up Email
-- 2 paragraphs, ≤60 words total
-- P1: case study + capability + example
-- P2: sector-shaped CTA (different angle from first email)
-
-## Reference
-
-See [references/prompt-patterns.md](references/prompt-patterns.md) for patterns distilled from past campaigns.
+- [references/example-sequence.md](references/example-sequence.md) — worked template set (the output shape)
+- [references/prompt-patterns.md](references/prompt-patterns.md) — copy patterns distilled from past campaigns
+- [references/email-structures.md](references/email-structures.md) — structural variants by role/seniority
