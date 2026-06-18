@@ -86,6 +86,7 @@ Use one, combine a few, or run them all. No required sequence, each skill works 
 | **list-enrichment** | Add research columns to Extruct tables |
 | **table-creation** | Create Extruct table, upload rows, add columns |
 | **list-segmentation** | Tier companies by hypothesis fit + data richness |
+| **account-research** | Deep-dive one target account: resolve its entity tree, map buyers, mine signals |
 | **people-search** | Find LinkedIn profiles via Extruct |
 | **email-search** | Get verified emails + phones via contact enrichment providers |
 | **email-prompt-building** | Build self-contained prompt template for a campaign. **Edit this skill to change email structure** (paragraph count, word limits, format). |
