@@ -60,6 +60,7 @@ Add atomic, single-job `research_pro` columns — one per signal layer, never on
 | Column | Mines |
 |--------|-------|
 | `open_roles` | current open positions in-region and what they reveal about where budget is moving |
+| `closed_roles` | recently filled or closed positions — where headcount actually grew, and the team's hiring throughput |
 | `leadership_changes` | recent hires, departures, promotions in the target functions (the buying-window signal) |
 | `recent_news` | dated events: M&A, rebrands, launches, partnerships, funding |
 | `tech_stack` | the CRM and the incumbent tooling the offer sits beside |

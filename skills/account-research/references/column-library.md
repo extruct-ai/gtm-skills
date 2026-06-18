@@ -34,6 +34,21 @@ Add these via the `extruct-api` skill, run only the new columns scoped to their 
 }
 ```
 
+## Closed roles
+
+```json
+{
+  "kind": "agent",
+  "name": "Closed roles",
+  "key": "closed_roles",
+  "value": {
+    "agent_type": "research_pro",
+    "output_format": "text",
+    "prompt": "Atomic task. Anchor on {input}. List recently CLOSED or filled job postings relevant to [CONTEXT: target functions] from the last 6-12 months, with title, region, and the source URL. Closed roles show where headcount actually grew and the team's hiring throughput, which open roles alone do not. Verified only; cite each. If none found, say 'not found'."
+  }
+}
+```
+
 ## Leadership changes
 
 ```json
