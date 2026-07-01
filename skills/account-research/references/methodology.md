@@ -1,12 +1,12 @@
 # Account Research — methodology
 
-How to turn Extruct cells into a decision-ready dossier. The step-by-step workflow lives in SKILL.md; this is the reasoning behind it.
+How to turn the Extruct Deep Research report into a decision-ready dossier. The step-by-step workflow lives in SKILL.md; this is the reasoning behind it.
 
 ## Entity resolution (why it leads)
 
 The hard, defensible step. A flat database returns one record per company; an account that is a holding group, a franchise network, or a multi-region entity is really a tree of many legal entities. Resolving it — parent → divisions → operating units, deduped, with a verified count of legal entities and countries — defines the real buying surface. Every operating unit beneath the parent is a separate buyer; one logo can be dozens of conversations.
 
-Use the `entity_structure` column to resolve the tree, then carry the operating-unit domains into people discovery so you find the owner in each unit, not just at the parent.
+Have the brief resolve the tree and find the owner in each operating unit, not just at the parent — the report should name buyers across the whole tree.
 
 ## Linking signals to buyers — the tier model
 
@@ -45,6 +45,6 @@ Also emit a CRM-syncable map (companies + people + signals) for `campaign-sendin
 ## Quality bar
 
 - Every figure carries its source. Confidence-gate over guessing.
-- Read the actual cells; never report from memory.
-- If a required Extruct stage is wedged, stop and say so; don't backfill with web search or fabricate.
+- Read the actual report; never report from memory.
+- If the Deep Research task fails or wedges, stop and say so; don't backfill with web search or fabricate.
 - A smaller, fully-sourced dossier beats a padded one.
