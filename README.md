@@ -6,6 +6,8 @@ Run outbound campaigns end-to-end with [Extruct](https://www.extruct.ai) and [Cl
 
 For updates, follow [Danny Chepenko on LinkedIn](https://br.linkedin.com/in/danielchepenko).
 
+Backed by [Grip](https://trygrip.io) — LinkedIn outreach for modern teams.
+
 ## Getting Started
 
 ### 1. Install skills
